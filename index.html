@@ -133,7 +133,7 @@
         const response = await fetch("https://famgateway.in/api/create-order.php", {
           method: "POST",
           headers: {
-            "Authorization": "Bearer fam_15417683a9b54a3f16c565fe6241ee6fe3f8!",
+            "Authorization": "Bearer fam_57d7a34c06bb4cbca3636499091f296b3e009331",
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
@@ -142,12 +142,32 @@
           })
         });
 
+        if (response.status === 401) {
+          // Fallback check if FamGateway prefers standard X-Api-Key
+          const retryResponse = await fetch("https://famgateway.in/api/create-order.php", {
+            method: "POST",
+            headers: {
+              "X-Api-Key": "fam_57d7a34c06bb4cbca3636499091f296b3e009331",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              amount: 15.00,
+              redirect_url: "https://www.youtube.com/playlist?list=" + playlistId
+            })
+          });
+          const retryData = await retryResponse.json();
+          if (retryData.data && retryData.data.checkout_url) {
+            window.location.href = retryData.data.checkout_url;
+            return;
+          }
+        }
+
         const data = await response.json();
 
         if (data.data && data.data.checkout_url) {
           window.location.href = data.data.checkout_url;
         } else {
-          status.innerText = "Failed to launch payment. Please retry.";
+          status.innerText = "Error: " + (data.message || "Failed to create order");
           btn.disabled = false;
         }
       } catch (err) {
