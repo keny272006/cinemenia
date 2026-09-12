@@ -282,20 +282,21 @@
         const upiIntent = data.data.upi_intent || "";
         const qrUrl = data.data.qr_url;
 
-        // Build app-specific UPI deep-link
-        // upiIntent is like: upi://pay?pa=...&pn=...&am=...
-        const upiParams = upiIntent.replace(/^upi:\/\/pay\?/, "");
-        let deepLink = upiIntent;
+        // Clean up intent parameters: Remove 'tr' (Transaction Reference)
+        // 'tr' causes NPCI merchant mismatch errors ("bank limit exceeded") on P2P @fam handles
+        const parsedParams = new URLSearchParams(upiParams);
+        parsedParams.delete("tr");
+        const cleanParams = parsedParams.toString();
+        const cleanUpiIntent = `upi://pay?${cleanParams}`;
+
+        let deepLink = cleanUpiIntent;
 
         if (selectedAppType === "gpay") {
-          // Google Pay India scheme (tez://upi/pay or fallback upi://pay)
-          deepLink = `tez://upi/pay?${upiParams}`;
+          deepLink = `tez://upi/pay?${cleanParams}`;
         } else if (selectedAppType === "phonepe") {
-          // PhonePe scheme
-          deepLink = `phonepe://pay?${upiParams}`;
+          deepLink = `phonepe://pay?${cleanParams}`;
         } else if (selectedAppType === "paytm") {
-          // Paytm scheme
-          deepLink = `paytmmp://pay?${upiParams}`;
+          deepLink = `paytmmp://pay?${cleanParams}`;
         }
 
         // Start polling payment status in the background
@@ -303,23 +304,20 @@
 
         if (isMobile && upiIntent) {
           status.innerText = `Launching ${selectedAppName}... Complete ₹${payAmount} in your app.`;
-          
-          // Setup direct manual button in case auto-launch is blocked by in-app browser
-          directIntentBtn.href = deepLink;
+
+          directIntentBtn.href = cleanUpiIntent;
           directIntentBtn.style.display = "inline-block";
-          directIntentBtn.innerText = `Tap here to open ${selectedAppName}`;
+          directIntentBtn.innerText = `🔄 Tap here to open in any UPI App`;
           qrSection.style.display = "block";
           qrImage.src = qrUrl;
 
           // Attempt to open the UPI app directly
           window.location.href = deepLink;
 
-          // Fallback if specific app scheme is not handled, try generic upi:// after short delay
+          // Fallback to standard universal upi:// scheme after 1.2s if specific scheme was rejected
           setTimeout(() => {
-            directIntentBtn.onclick = function() {
-              window.location.href = upiIntent; // generic chooser
-            };
-          }, 1500);
+            window.location.href = cleanUpiIntent;
+          }, 1200);
 
         } else {
           // Desktop user or QR preference: display QR Code
