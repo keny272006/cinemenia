@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cinemenia - VIP Access</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background: #0b0f19;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #161f30;
+      border: 1px solid #243049;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .brand {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    .price-box {
+      background: #0b0f19;
+      border: 1px dashed #334155;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .price {
+      font-size: 32px;
+      font-weight: 800;
+      color: #22c55e;
+    }
+    .desc {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-top: 6px;
+    }
+    .pay-btn {
+      background: #22c55e;
+      color: #052e16;
+      font-size: 17px;
+      font-weight: 700;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .pay-btn:hover {
+      background: #16a34a;
+    }
+    .pay-btn:active {
+      transform: scale(0.98);
+    }
+    .pay-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #38bdf8;
+      min-height: 18px;
+    }
+    .footer-note {
+      margin-top: 20px;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="brand">cinemenia</div>
+    <div class="tagline">Exclusive Uncut Breakdown Access</div>
+
+    <div class="price-box">
+      <div class="price">₹15</div>
+      <div class="desc">Instant UPI payment &bull; Automatic redirection</div>
+    </div>
+
+    <button id="payBtn" class="pay-btn">🎬 Pay ₹15 via UPI</button>
+    <div id="statusMsg" class="status"></div>
+
+    <div class="footer-note">Supports Google Pay, PhonePe, Paytm & any UPI app</div>
+  </div>
+
+  <script>
+    // Reads ?list=PLAYLIST_ID from the page URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const playlistId = urlParams.get("list");
+
+    document.getElementById("payBtn").onclick = async function () {
+      const btn = this;
+      const status = document.getElementById("statusMsg");
+
+      if (!playlistId) {
+        alert("Error: Missing playlist link parameter (?list=). Check your link format.");
+        return;
+      }
+
+      btn.disabled = true;
+      status.innerText = "Launching UPI gateway...";
+
+      try {
+        const response = await fetch("https://famgateway.in/api/create-order.php", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer fam_15417683a9b54a3f16c565fe6241ee6fe3f8!",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            amount: 15.00,
+            redirect_url: "https://www.youtube.com/playlist?list=" + playlistId
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.data && data.data.checkout_url) {
+          window.location.href = data.data.checkout_url;
+        } else {
+          status.innerText = "Failed to launch payment. Please retry.";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        status.innerText = "Connection error. Please try again.";
+        btn.disabled = false;
+      }
+    };
+  </script>
+
+</body>
+</html>
