@@ -134,11 +134,40 @@
       color: #38bdf8;
       min-height: 18px;
       margin-top: 12px;
+      line-height: 1.4;
     }
     .note {
       font-size: 11px;
       color: #64748b;
       margin-top: 14px;
+    }
+    .qr-container {
+      display: none;
+      margin-top: 16px;
+      padding: 14px;
+      background: #0b0f19;
+      border-radius: 12px;
+      border: 1px solid #243049;
+    }
+    .qr-container img {
+      width: 190px;
+      height: 190px;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 6px;
+    }
+    .qr-note {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .manual-link {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #38bdf8;
+      text-decoration: underline;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -146,50 +175,76 @@
 
   <div class="card">
     <div class="brand">cinemenia</div>
-    <div class="subtitle">Complete payment to instantly unlock YouTube access</div>
+    <div id="movieTitle" class="subtitle">Complete payment to instantly unlock YouTube access</div>
 
     <div class="amount-box">
       <div class="amount-label">Access Fee</div>
-      <div class="amount">₹15</div>
+      <div id="displayAmount" class="amount">₹15</div>
     </div>
 
     <div class="app-title">Select Payment App</div>
     <div class="app-grid">
-      <div class="app-card selected" onclick="selectApp(this, 'PhonePe')">
-        <div class="app-icon">🟣</div>
-        <span>PhonePe</span>
-      </div>
-      <div class="app-card" onclick="selectApp(this, 'Google Pay')">
+      <div class="app-card selected" onclick="selectApp(this, 'Google Pay', 'gpay')">
         <div class="app-icon">🔵</div>
         <span>GPay</span>
       </div>
-      <div class="app-card" onclick="selectApp(this, 'Paytm')">
+      <div class="app-card" onclick="selectApp(this, 'PhonePe', 'phonepe')">
+        <div class="app-icon">🟣</div>
+        <span>PhonePe</span>
+      </div>
+      <div class="app-card" onclick="selectApp(this, 'Paytm', 'paytm')">
         <div class="app-icon">🔷</div>
-        <span>Paytm / UPI</span>
+        <span>Paytm</span>
       </div>
     </div>
 
-    <button id="mainPayBtn" class="pay-btn">🚀 Pay ₹15 via PhonePe</button>
+    <button id="mainPayBtn" class="pay-btn">🚀 Open & Pay via GPay</button>
     <div id="statusMsg" class="status"></div>
-    <div class="note">🔒 Instant redirect to YouTube playlist after payment</div>
+
+    <div id="qrSection" class="qr-container">
+      <img id="qrImage" src="" alt="Payment QR Code" />
+      <div class="qr-note">Scan with any UPI app to pay</div>
+      <a id="directIntentBtn" class="manual-link" style="display:none; margin-top:8px; font-weight:600;">Tap here if UPI app didn't open automatically</a>
+    </div>
+
+    <div class="note">🔒 Instant redirect to YouTube playlist upon payment</div>
   </div>
 
   <script>
-    let selectedAppName = "PhonePe";
+    // Read dynamic params from URL: ?list=...&price=...&title=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawListId = urlParams.get("list");
+    const rawPrice = urlParams.get("price") || urlParams.get("p") || "15";
+    const rawTitle = urlParams.get("title");
 
-    function selectApp(element, name) {
+    // Dynamic price calculation
+    const payAmount = Math.max(1, parseFloat(rawPrice) || 15);
+    document.getElementById("displayAmount").innerText = "₹" + payAmount;
+
+    if (rawTitle) {
+      document.getElementById("movieTitle").innerText = `Unlock ${decodeURIComponent(rawTitle)} on YouTube`;
+    }
+
+    let selectedAppName = "GPay";
+    let selectedAppType = "gpay";
+
+    function selectApp(element, name, type) {
       document.querySelectorAll(".app-card").forEach(el => el.classList.remove("selected"));
       element.classList.add("selected");
       selectedAppName = name;
-      document.getElementById("mainPayBtn").innerText = `🚀 Pay ₹15 via ${name}`;
+      selectedAppType = type;
+      document.getElementById("mainPayBtn").innerText = `🚀 Open & Pay via ${name}`;
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const rawListId = urlParams.get("list");
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    let pollInterval = null;
 
     document.getElementById("mainPayBtn").onclick = async function() {
       const btn = this;
       const status = document.getElementById("statusMsg");
+      const qrSection = document.getElementById("qrSection");
+      const qrImage = document.getElementById("qrImage");
+      const directIntentBtn = document.getElementById("directIntentBtn");
 
       if (!rawListId) {
         alert("Error: Missing playlist link parameter (?list=). Please check the link sent in your DM.");
@@ -197,11 +252,10 @@
       }
 
       const playlistId = encodeURIComponent(rawListId.trim());
-      // Append parameter so FamGateway's appended tracking params don't break the YouTube query
       const safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
 
       btn.disabled = true;
-      status.innerText = `Connecting to ${selectedAppName}...`;
+      status.innerText = `Opening ${selectedAppName}...`;
 
       try {
         const response = await fetch("https://famgateway.in/api/create-order.php", {
@@ -211,46 +265,100 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            amount: 15.00,
+            amount: payAmount,
             redirect_url: safeRedirectUrl
           })
         });
 
-        if (response.status === 401) {
-          // Fallback check if FamGateway prefers X-Api-Key
-          const retryResponse = await fetch("https://famgateway.in/api/create-order.php", {
-            method: "POST",
-            headers: {
-              "X-Api-Key": "fam_57d7a34c06bb4cbca3636499091f296b3e009331",
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              amount: 15.00,
-              redirect_url: safeRedirectUrl
-            })
-          });
-          const retryData = await retryResponse.json();
-          if (retryData.data && retryData.data.checkout_url) {
-            status.innerText = "Redirecting to payment gateway...";
-            window.location.href = retryData.data.checkout_url;
-            return;
-          }
-        }
-
         const data = await response.json();
 
-        if (data.data && data.data.checkout_url) {
-          status.innerText = "Redirecting to payment gateway...";
-          window.location.href = data.data.checkout_url;
-        } else {
-          status.innerText = "Error: " + (data.message || "Failed to create order. Try again.");
+        if (!data.data || !data.data.order_id) {
+          status.innerText = "Error: " + (data.message || "Failed to create order");
           btn.disabled = false;
+          return;
         }
+
+        const orderId = data.data.order_id;
+        const upiIntent = data.data.upi_intent || "";
+        const qrUrl = data.data.qr_url;
+
+        // Build app-specific UPI deep-link
+        // upiIntent is like: upi://pay?pa=...&pn=...&am=...
+        const upiParams = upiIntent.replace(/^upi:\/\/pay\?/, "");
+        let deepLink = upiIntent;
+
+        if (selectedAppType === "gpay") {
+          // Google Pay India scheme (tez://upi/pay or fallback upi://pay)
+          deepLink = `tez://upi/pay?${upiParams}`;
+        } else if (selectedAppType === "phonepe") {
+          // PhonePe scheme
+          deepLink = `phonepe://pay?${upiParams}`;
+        } else if (selectedAppType === "paytm") {
+          // Paytm scheme
+          deepLink = `paytmmp://pay?${upiParams}`;
+        }
+
+        // Start polling payment status in the background
+        startPolling(orderId, safeRedirectUrl, status);
+
+        if (isMobile && upiIntent) {
+          status.innerText = `Launching ${selectedAppName}... Complete ₹${payAmount} in your app.`;
+          
+          // Setup direct manual button in case auto-launch is blocked by in-app browser
+          directIntentBtn.href = deepLink;
+          directIntentBtn.style.display = "inline-block";
+          directIntentBtn.innerText = `Tap here to open ${selectedAppName}`;
+          qrSection.style.display = "block";
+          qrImage.src = qrUrl;
+
+          // Attempt to open the UPI app directly
+          window.location.href = deepLink;
+
+          // Fallback if specific app scheme is not handled, try generic upi:// after short delay
+          setTimeout(() => {
+            directIntentBtn.onclick = function() {
+              window.location.href = upiIntent; // generic chooser
+            };
+          }, 1500);
+
+        } else {
+          // Desktop user or QR preference: display QR Code
+          status.innerText = `Scan QR code with ${selectedAppName} or any UPI app`;
+          qrImage.src = qrUrl;
+          qrSection.style.display = "block";
+        }
+
       } catch (err) {
         status.innerText = "Connection error. Please try again.";
         btn.disabled = false;
       }
     };
+
+    function startPolling(orderId, redirectUrl, statusElem) {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`https://famgateway.in/api/checkout-status.php?order_id=${encodeURIComponent(orderId)}`);
+          const data = await res.json();
+
+          if (data.status === "success") {
+            clearInterval(pollInterval);
+            statusElem.style.color = "#22c55e";
+            statusElem.innerText = "✅ Payment Successful! Unlocking YouTube playlist...";
+            setTimeout(() => {
+              window.location.href = redirectUrl;
+            }, 1000);
+          } else if (data.status === "expired") {
+            clearInterval(pollInterval);
+            statusElem.style.color = "#ef4444";
+            statusElem.innerText = "Order expired. Please refresh and try again.";
+          }
+        } catch (e) {
+          // Silent catch on network hiccups during polling
+        }
+      }, 2500);
+    }
   </script>
 </body>
 </html>
