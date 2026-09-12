@@ -205,6 +205,9 @@
       <img id="qrImage" src="" alt="Payment QR Code" />
       <div class="qr-note">Scan with any UPI app to pay</div>
       <a id="directIntentBtn" class="manual-link" style="display:none; margin-top:8px; font-weight:600;">Tap here if UPI app didn't open automatically</a>
+      <div style="margin-top:10px;">
+        <button id="copyUpiBtn" type="button" onclick="copyUpi()" style="background:#0e1524; color:#38bdf8; border:1px solid #22304d; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">📋 Copy UPI ID: 7490086192@fam</button>
+      </div>
     </div>
 
     <div class="note">🔒 Instant redirect to YouTube playlist upon payment</div>
@@ -236,6 +239,13 @@
       document.getElementById("mainPayBtn").innerText = `🚀 Open & Pay via ${name}`;
     }
 
+    function copyUpi() {
+      navigator.clipboard.writeText("7490086192@fam");
+      const b = document.getElementById("copyUpiBtn");
+      b.innerText = "✅ Copied: 7490086192@fam";
+      setTimeout(() => { b.innerText = "📋 Copy UPI ID: 7490086192@fam"; }, 2000);
+    }
+
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     let pollInterval = null;
 
@@ -258,40 +268,24 @@
       status.innerText = `Opening ${selectedAppName}...`;
 
       try {
-        // Auto-retry helper with timeout for mobile networks
-        let data = null;
-        for (let attempt = 1; attempt <= 2; attempt++) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
+        const response = await fetch("https://famgateway.in/api/create-order.php", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer fam_57d7a34c06bb4cbca3636499091f296b3e009331",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            amount: payAmount,
+            redirect_url: safeRedirectUrl
+          })
+        });
 
-            const response = await fetch("https://famgateway.in/api/create-order.php", {
-              method: "POST",
-              signal: controller.signal,
-              headers: {
-                "Authorization": "Bearer fam_57d7a34c06bb4cbca3636499091f296b3e009331",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                amount: payAmount,
-                redirect_url: safeRedirectUrl
-              })
-            });
-
-            clearTimeout(timeoutId);
-            data = await response.json();
-            if (data && data.data && data.data.order_id) break;
-          } catch (netErr) {
-            if (attempt === 2) throw netErr;
-            status.innerText = "Connecting... (retrying)";
-            await new Promise(r => setTimeout(r, 1200));
-          }
-        }
+        const data = await response.json();
 
         if (!data || !data.data || !data.data.order_id) {
           status.innerText = "Error: " + ((data && data.message) || "Failed to create order");
           btn.disabled = false;
-          btn.innerText = `🔄 Retry via ${selectedAppName}`;
+          btn.innerText = `🚀 Open & Pay via ${selectedAppName}`;
           return;
         }
 
@@ -300,7 +294,8 @@
         const qrUrl = data.data.qr_url;
 
         // Clean up intent parameters: Remove 'tr' (Transaction Reference)
-        // 'tr' causes NPCI merchant mismatch errors ("bank limit exceeded") on P2P @fam handles
+        // 'tr' causes NPCI unregistered merchant errors on personal @fam handles
+        const upiParams = upiIntent.replace(/^upi:\/\/pay\?/, "");
         const parsedParams = new URLSearchParams(upiParams);
         parsedParams.delete("tr");
         const cleanParams = parsedParams.toString();
@@ -320,7 +315,7 @@
         startPolling(orderId, safeRedirectUrl, status);
 
         if (isMobile && upiIntent) {
-          status.innerText = `Launching ${selectedAppName}... Complete ₹${payAmount} in your app.`;
+          status.innerText = `Opening ${selectedAppName}... Complete ₹${payAmount} in your app.`;
 
           directIntentBtn.href = cleanUpiIntent;
           directIntentBtn.style.display = "inline-block";
@@ -328,13 +323,8 @@
           qrSection.style.display = "block";
           qrImage.src = qrUrl;
 
-          // Attempt to open the UPI app directly
+          // Attempt to open the selected UPI app directly
           window.location.href = deepLink;
-
-          // Fallback to standard universal upi:// scheme after 1.2s if specific scheme was rejected
-          setTimeout(() => {
-            window.location.href = cleanUpiIntent;
-          }, 1200);
 
         } else {
           // Desktop user or QR preference: display QR Code
