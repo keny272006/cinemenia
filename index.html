@@ -14,84 +14,131 @@
     body {
       background: #0b0f19;
       color: #ffffff;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 100vh;
       padding: 20px;
     }
     .card {
       background: #161f30;
       border: 1px solid #243049;
       border-radius: 16px;
-      padding: 32px 24px;
-      max-width: 400px;
+      padding: 28px 20px;
+      max-width: 390px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
     .brand {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 800;
-      letter-spacing: 1px;
       color: #38bdf8;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
-      margin-bottom: 8px;
     }
-    .tagline {
-      font-size: 14px;
+    .subtitle {
+      font-size: 13px;
       color: #94a3b8;
-      margin-bottom: 24px;
+      margin: 6px 0 18px;
     }
-    .price-box {
+    .amount-box {
       background: #0b0f19;
       border: 1px dashed #334155;
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 24px;
+      padding: 14px;
+      margin-bottom: 18px;
     }
-    .price {
+    .amount-label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .amount {
       font-size: 32px;
       font-weight: 800;
       color: #22c55e;
+      margin-top: 2px;
     }
-    .desc {
-      font-size: 13px;
+
+    /* App Selection Grid */
+    .app-title {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: left;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .app-card {
+      background: #0e1524;
+      border: 1.5px solid #22304d;
+      border-radius: 10px;
+      padding: 12px 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .app-card:hover {
+      border-color: #38bdf8;
+      background: #111c30;
+    }
+    .app-card.selected {
+      border-color: #38bdf8;
+      background: #13233c;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+    }
+    .app-card span {
+      font-size: 11px;
+      font-weight: 600;
       color: #cbd5e1;
-      margin-top: 6px;
     }
+    .app-icon {
+      font-size: 20px;
+    }
+
     .pay-btn {
-      background: #22c55e;
-      color: #052e16;
-      font-size: 17px;
-      font-weight: 700;
       width: 100%;
-      padding: 16px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
       border: none;
       border-radius: 10px;
+      background: #22c55e;
+      color: #052e16;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s ease;
     }
     .pay-btn:hover {
       background: #16a34a;
-    }
-    .pay-btn:active {
-      transform: scale(0.98);
     }
     .pay-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
     .status {
-      margin-top: 16px;
       font-size: 13px;
       color: #38bdf8;
       min-height: 18px;
+      margin-top: 12px;
     }
-    .footer-note {
-      margin-top: 20px;
+    .note {
       font-size: 11px;
       color: #64748b;
+      margin-top: 14px;
     }
   </style>
 </head>
@@ -99,35 +146,62 @@
 
   <div class="card">
     <div class="brand">cinemenia</div>
-    <div class="tagline">Exclusive Uncut Breakdown Access</div>
+    <div class="subtitle">Complete payment to instantly unlock YouTube access</div>
 
-    <div class="price-box">
-      <div class="price">₹15</div>
-      <div class="desc">Instant UPI payment &bull; Automatic redirection</div>
+    <div class="amount-box">
+      <div class="amount-label">Access Fee</div>
+      <div class="amount">₹15</div>
     </div>
 
-    <button id="payBtn" class="pay-btn">🎬 Pay ₹15 via UPI</button>
-    <div id="statusMsg" class="status"></div>
+    <div class="app-title">Select Payment App</div>
+    <div class="app-grid">
+      <div class="app-card selected" onclick="selectApp(this, 'PhonePe')">
+        <div class="app-icon">🟣</div>
+        <span>PhonePe</span>
+      </div>
+      <div class="app-card" onclick="selectApp(this, 'Google Pay')">
+        <div class="app-icon">🔵</div>
+        <span>GPay</span>
+      </div>
+      <div class="app-card" onclick="selectApp(this, 'Paytm')">
+        <div class="app-icon">🔷</div>
+        <span>Paytm / UPI</span>
+      </div>
+    </div>
 
-    <div class="footer-note">Supports Google Pay, PhonePe, Paytm & any UPI app</div>
+    <button id="mainPayBtn" class="pay-btn">🚀 Pay ₹15 via PhonePe</button>
+    <div id="statusMsg" class="status"></div>
+    <div class="note">🔒 Instant redirect to YouTube playlist after payment</div>
   </div>
 
   <script>
-    // Reads ?list=PLAYLIST_ID from the page URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const playlistId = urlParams.get("list");
+    let selectedAppName = "PhonePe";
 
-    document.getElementById("payBtn").onclick = async function () {
+    function selectApp(element, name) {
+      document.querySelectorAll(".app-card").forEach(el => el.classList.remove("selected"));
+      element.classList.add("selected");
+      selectedAppName = name;
+      document.getElementById("mainPayBtn").innerText = `🚀 Pay ₹15 via ${name}`;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawListId = urlParams.get("list");
+
+    document.getElementById("mainPayBtn").onclick = async function() {
       const btn = this;
       const status = document.getElementById("statusMsg");
 
-      if (!playlistId) {
-        alert("Error: Missing playlist link parameter (?list=). Check your link format.");
+      if (!rawListId) {
+        alert("Error: Missing playlist link parameter (?list=). Please check the link sent in your DM.");
         return;
       }
 
+      const playlistId = encodeURIComponent(rawListId.trim());
+      // Append parameter so FamGateway's appended tracking params don't break the YouTube query
+      const safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
+
       btn.disabled = true;
-      status.innerText = "Launching UPI gateway...";
+      status.innerText = `Connecting to ${selectedAppName}...`;
 
       try {
         const response = await fetch("https://famgateway.in/api/create-order.php", {
@@ -138,12 +212,12 @@
           },
           body: JSON.stringify({
             amount: 15.00,
-            redirect_url: "https://www.youtube.com/playlist?list=" + playlistId
+            redirect_url: safeRedirectUrl
           })
         });
 
         if (response.status === 401) {
-          // Fallback check if FamGateway prefers standard X-Api-Key
+          // Fallback check if FamGateway prefers X-Api-Key
           const retryResponse = await fetch("https://famgateway.in/api/create-order.php", {
             method: "POST",
             headers: {
@@ -152,11 +226,12 @@
             },
             body: JSON.stringify({
               amount: 15.00,
-              redirect_url: "https://www.youtube.com/playlist?list=" + playlistId
+              redirect_url: safeRedirectUrl
             })
           });
           const retryData = await retryResponse.json();
           if (retryData.data && retryData.data.checkout_url) {
+            status.innerText = "Redirecting to payment gateway...";
             window.location.href = retryData.data.checkout_url;
             return;
           }
@@ -165,9 +240,10 @@
         const data = await response.json();
 
         if (data.data && data.data.checkout_url) {
+          status.innerText = "Redirecting to payment gateway...";
           window.location.href = data.data.checkout_url;
         } else {
-          status.innerText = "Error: " + (data.message || "Failed to create order");
+          status.innerText = "Error: " + (data.message || "Failed to create order. Try again.");
           btn.disabled = false;
         }
       } catch (err) {
@@ -176,6 +252,5 @@
       }
     };
   </script>
-
 </body>
 </html>
