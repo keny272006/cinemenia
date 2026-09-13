@@ -3,366 +3,595 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cinemenia - Instant Access</title>
+  <title>Cinemenia • Premier Access</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  
   <!-- Razorpay Official Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <style>
+    :root {
+      --bg-primary: #07090e;
+      --surface: rgba(18, 24, 38, 0.72);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-hover: rgba(26, 34, 52, 0.85);
+      --accent-gold: #f59e0b;
+      --accent-gold-light: #fbbf24;
+      --accent-glow: rgba(245, 158, 11, 0.15);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.25);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+
     body {
-      background: #080c14;
-      color: #ffffff;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .card {
-      background: #111827;
-      border: 1px solid #1f293d;
-      border-radius: 20px;
-      padding: 30px 24px;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      padding: 24px 16px;
       position: relative;
-      overflow: hidden;
-    }
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #38bdf8, #22c55e);
-    }
-    .brand {
-      font-size: 28px;
-      font-weight: 800;
-      color: #38bdf8;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: #94a3b8;
-      margin: 8px 0 20px;
-      line-height: 1.4;
-    }
-    .movie-highlight {
-      color: #f1f5f9;
-      font-weight: 600;
-    }
-    .amount-box {
-      background: #0a0f1d;
-      border: 1px dashed #243049;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-    .amount-label {
-      font-size: 11px;
-      color: #64748b;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .amount {
-      font-size: 36px;
-      font-weight: 800;
-      color: #22c55e;
-      margin-top: 4px;
+      overflow-x: hidden;
     }
 
-    /* Benefits List */
-    .features-list {
-      list-style: none;
-      text-align: left;
-      margin-bottom: 22px;
-      background: #0c1322;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 13px;
-      color: #cbd5e1;
+    /* Ambient Cinema Lighting Glows */
+    .ambient-glow-1 {
+      position: fixed;
+      top: -15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 550px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 70%);
+      filter: blur(70px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-glow-2 {
+      position: fixed;
+      bottom: -10%;
+      right: 10%;
+      width: 400px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Main Card Container */
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 24px 60px -12px rgba(0, 0, 0, 0.75),
+        0 0 45px rgba(245, 158, 11, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-    }
-    .features-list li {
-      display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .features-list li span {
-      font-size: 16px;
+      text-align: center;
     }
 
-    /* Action Buttons */
-    .actions {
+    /* Top Brand Badge */
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.22);
+      border-radius: 999px;
+      padding: 6px 14px;
+      margin-bottom: 20px;
+    }
+    .brand-icon {
+      width: 14px;
+      height: 14px;
+      fill: var(--accent-gold);
+    }
+    .brand-text {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--accent-gold-light);
+    }
+
+    /* Movie Information Header */
+    .movie-headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .movie-highlight {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .movie-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      max-width: 340px;
+    }
+
+    /* Price Section */
+    .price-ticket {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(14, 20, 32, 0.9) 0%, rgba(10, 14, 24, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .price-ticket::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 15%;
+      bottom: 15%;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background: var(--accent-gold);
+      box-shadow: 0 0 10px var(--accent-gold);
+    }
+    .price-meta {
+      text-align: left;
+    }
+    .price-tag-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .price-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .price-value-group {
+      text-align: right;
+    }
+    .price-current {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .price-original {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Feature Perks */
+    .perks-card {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      padding: 16px 18px;
+      margin-bottom: 24px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      width: 100%;
     }
-    .pay-btn {
+    .perk-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #cbd5e1;
+      text-align: left;
+    }
+    .perk-icon-wrap {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .perk-icon-wrap svg {
+      width: 13px;
+      height: 13px;
+      stroke: var(--success);
+      stroke-width: 2.5;
+    }
+
+    /* Primary CTA Button */
+    .cta-button {
       width: 100%;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 800;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #042410;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 18px rgba(34, 197, 94, 0.35);
+      box-shadow: 
+        0 4px 20px var(--success-glow),
+        0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
     }
-    .pay-btn:hover {
-      background: linear-gradient(135deg, #2ae06b, #1bb553);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(34, 197, 94, 0.45);
+    .cta-button::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.75s ease;
     }
-    .pay-btn:disabled {
-      opacity: 0.6;
+    .cta-button:hover {
+      background: linear-gradient(135deg, #18c58b 0%, #08a374 100%);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(16, 185, 129, 0.35),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .cta-button:hover::after {
+      left: 150%;
+    }
+    .cta-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 14px var(--success-glow);
+    }
+    .cta-button:disabled {
+      opacity: 0.65;
       cursor: not-allowed;
       transform: none;
     }
 
-    /* Supported payment badges */
-    .payment-methods {
-      margin-top: 14px;
-      font-size: 11px;
-      color: #64748b;
+    /* Trust & Security Indicators */
+    .trust-footer {
+      margin-top: 20px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
       align-items: center;
+      gap: 12px;
+      width: 100%;
     }
-    .method-chips {
-      display: flex;
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.2px;
+    }
+    .security-badge svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--text-muted);
+    }
+
+    .payment-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: center;
     }
-    .chip {
-      background: #172033;
-      border: 1px solid #223049;
-      padding: 3px 8px;
+    .payment-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 6px;
-      color: #94a3b8;
-      font-weight: 600;
+      padding: 4px 8px;
       font-size: 10px;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 0.3px;
     }
 
-    /* Live status badge */
+    /* Live Status Badge */
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #112238;
-      border: 1px solid #1e3a5f;
-      border-radius: 20px;
-      padding: 8px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      padding: 6px 14px;
       font-size: 12px;
-      color: #38bdf8;
-      font-weight: 600;
-      margin-top: 18px;
+      color: var(--text-secondary);
+      margin-top: 16px;
+      font-weight: 500;
     }
     .pulse-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
-      animation: pulse 1.5s infinite;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 1.8s infinite;
     }
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 0.3; transform: scale(0.85); }
     }
 
-    /* Error alert */
+    /* Error Message Box */
     .alert-box {
-      background: #2b1115;
-      border: 1px solid #842029;
-      color: #f8d7da;
-      padding: 10px;
-      border-radius: 8px;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      color: #fca5a5;
+      padding: 12px 14px;
+      border-radius: 12px;
       font-size: 12px;
-      margin-top: 12px;
+      margin-top: 14px;
       display: none;
+      width: 100%;
       text-align: left;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
+  <!-- Ambient Cinematic Gradients -->
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Main Card -->
   <div class="card">
-    <div class="brand">cinemenia</div>
-    <div id="movieTitle" class="subtitle">
-      Unlock instant access to <span class="movie-highlight">Daily Movie Explanation</span>
+    
+    <!-- Brand Pill -->
+    <div class="brand-pill">
+      <svg class="brand-icon" viewBox="0 0 24 24">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span class="brand-text">CINEMENIA PREMIER</span>
     </div>
 
-    <div class="amount-box">
-      <div class="amount-label">One-Time Access Fee</div>
-      <div id="displayAmount" class="amount">₹15</div>
+    <!-- Movie Title -->
+    <h1 id="movieHeading" class="movie-headline">
+      Unlock <span class="movie-highlight">Daily Movie Explanation</span>
+    </h1>
+    <p class="movie-desc">
+      Watch the full explanation and breakdown on YouTube immediately after completing your access pass.
+    </p>
+
+    <!-- Pricing Ticket Box -->
+    <div class="price-ticket">
+      <div class="price-meta">
+        <div class="price-tag-label">Access Pass</div>
+        <div class="price-sub">One-time payment • Instant unlock</div>
+      </div>
+      <div class="price-value-group">
+        <div id="priceDisplay" class="price-current">₹15</div>
+        <div id="originalPrice" class="price-original">₹99</div>
+      </div>
     </div>
 
-    <ul class="features-list">
-      <li><span>🎬</span> Complete, uncut explanation video</li>
-      <li><span>⚡</span> Instant YouTube redirect right after payment</li>
-      <li><span>🔒</span> 100% Secure Checkout via Razorpay</li>
-    </ul>
-
-    <!-- Action Buttons -->
-    <div class="actions">
-      <button id="payBtn" class="pay-btn" type="button" onclick="startPayment()">
-        ⚡ Pay ₹15 & Watch Instantly
-      </button>
+    <!-- Key Perks -->
+    <div class="perks-card">
+      <div class="perk-item">
+        <div class="perk-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <span>Full-length uncensored video breakdown</span>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <span>Instant automatic redirect to YouTube</span>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <span>Zero recurring fees • Lifetime playlist link</span>
+      </div>
     </div>
 
-    <div id="errorAlert" class="alert-box"></div>
+    <!-- Action Button -->
+    <button id="payButton" class="cta-button" type="button" onclick="initiatePayment()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span id="btnText">Unlock & Watch Now</span>
+    </button>
 
-    <!-- Live Polling Status -->
+    <!-- Error Box -->
+    <div id="alertBox" class="alert-box"></div>
+
+    <!-- Live Status Indicator -->
     <div class="status-badge" id="statusBadge">
       <div class="pulse-dot"></div>
       <span id="statusText">Ready for instant access</span>
     </div>
 
-    <!-- Payment Badges -->
-    <div class="payment-methods">
-      <span>Supported Payment Methods:</span>
-      <div class="method-chips">
-        <span class="chip">Google Pay</span>
-        <span class="chip">PhonePe</span>
-        <span class="chip">Paytm</span>
-        <span class="chip">UPI QR</span>
-        <span class="chip">Cards</span>
+    <!-- Trust & Payment Methods -->
+    <div class="trust-footer">
+      <div class="security-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>Secured by Razorpay • 256-bit SSL Encryption</span>
+      </div>
+
+      <div class="payment-chips">
+        <span class="payment-chip">PhonePe</span>
+        <span class="payment-chip">Google Pay</span>
+        <span class="payment-chip">Paytm</span>
+        <span class="payment-chip">UPI QR</span>
+        <span class="payment-chip">Cards</span>
+        <span class="payment-chip">NetBanking</span>
       </div>
     </div>
+
   </div>
 
   <script>
     // Configuration
     const RAZORPAY_KEY_ID = "rzp_live_Tbb8qpq1Uclr7z";
 
-    // 1. Read URL Parameters (?list=...&price=...&title=...)
+    // Parse URL Parameters
     const urlParams = new URLSearchParams(window.location.search);
     const rawListId = urlParams.get("list");
     const rawPrice = urlParams.get("price") || urlParams.get("p") || "15";
     const rawTitle = urlParams.get("title");
 
-    const payAmount = Math.max(1, parseFloat(rawPrice) || 15);
-    document.getElementById("displayAmount").innerText = "₹" + payAmount;
-    document.getElementById("payBtn").innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
+    const amountNum = Math.max(1, parseFloat(rawPrice) || 15);
+    document.getElementById("priceDisplay").innerText = "₹" + amountNum;
+    document.getElementById("originalPrice").innerText = "₹" + (amountNum * 5);
+    document.getElementById("btnText").innerText = `Pay ₹${amountNum} & Watch Now`;
 
     if (rawTitle) {
-      document.getElementById("movieTitle").innerHTML = 
-        `Unlock <span class="movie-highlight">${decodeURIComponent(rawTitle)}</span> on YouTube`;
+      document.getElementById("movieHeading").innerHTML = 
+        `Unlock <span class="movie-highlight">${decodeURIComponent(rawTitle)}</span>`;
     }
 
     if (!rawListId) {
-      showError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
+      displayError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
     }
 
     const playlistId = encodeURIComponent((rawListId || "").trim());
     const safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
 
-    function showError(msg) {
-      const err = document.getElementById("errorAlert");
-      err.innerText = msg;
-      err.style.display = "block";
+    function displayError(message) {
+      const box = document.getElementById("alertBox");
+      box.innerText = message;
+      box.style.display = "block";
     }
 
-    // 2. Trigger Razorpay Payment
-    async function startPayment() {
-      const payBtn = document.getElementById("payBtn");
+    async function initiatePayment() {
+      const payBtn = document.getElementById("payButton");
+      const btnText = document.getElementById("btnText");
       const statusText = document.getElementById("statusText");
-      const errBox = document.getElementById("errorAlert");
-      errBox.style.display = "none";
+      const alertBox = document.getElementById("alertBox");
+      alertBox.style.display = "none";
 
       payBtn.disabled = true;
-      payBtn.innerText = "⏳ Opening Secure Checkout...";
-      statusText.innerText = "Connecting to Razorpay...";
+      btnText.innerText = "Connecting to Gateway...";
+      statusText.innerText = "Opening secure checkout...";
 
       try {
-        // Step A: Request Order ID from our serverless backend
-        const orderRes = await fetch("/api/create-order", {
+        // Step 1: Create Order via serverless backend
+        const res = await fetch("/api/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: payAmount,
-            title: rawTitle || "Movie Access",
+            amount: amountNum,
+            title: rawTitle || "Cinemenia Access",
             list: playlistId
           })
         });
 
-        const orderData = await orderRes.json();
+        const orderData = await res.json();
 
-        if (!orderRes.ok || !orderData.order_id) {
-          throw new Error(orderData.error || "Failed to initialize payment order.");
+        if (!res.ok || !orderData.order_id) {
+          throw new Error(orderData.error || "Failed to initialize payment. Please retry.");
         }
 
-        // Step B: Open Razorpay Checkout Modal
+        // Step 2: Launch Official Razorpay Checkout Modal
         const options = {
           key: orderData.key_id || RAZORPAY_KEY_ID,
           amount: orderData.amount,
           currency: orderData.currency || "INR",
-          name: "cinemenia",
-          description: rawTitle ? decodeURIComponent(rawTitle) : "Daily Movie Explanation",
+          name: "Cinemenia",
+          description: rawTitle ? decodeURIComponent(rawTitle) : "Premier Movie Access",
           order_id: orderData.order_id,
           handler: function (response) {
             // Payment success callback
             const badge = document.getElementById("statusBadge");
-            badge.style.background = "#052e16";
-            badge.style.borderColor = "#22c55e";
-            statusText.style.color = "#22c55e";
-            statusText.innerText = "✅ Payment Successful! Unlocking YouTube...";
-            payBtn.innerText = "✅ Payment Received!";
+            badge.style.background = "rgba(16, 185, 129, 0.15)";
+            badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
+            statusText.style.color = "#10b981";
+            statusText.innerText = "✅ Payment Verified! Redirecting to YouTube...";
+            btnText.innerText = "Redirecting...";
 
             setTimeout(() => {
               window.location.href = safeRedirectUrl;
-            }, 1200);
+            }, 1000);
           },
           prefill: {},
           theme: {
-            color: "#22c55e"
+            color: "#10b981"
           },
           modal: {
             ondismiss: function () {
               payBtn.disabled = false;
-              payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
-              statusText.innerText = "Payment cancelled. You can try again.";
+              btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
+              statusText.innerText = "Ready for instant access";
             }
           }
         };
 
         const rzp = new Razorpay(options);
         rzp.on("payment.failed", function (response) {
-          showError("Payment Failed: " + (response.error.description || "Please try again."));
+          displayError("Payment failed: " + (response.error.description || "Please try again."));
           payBtn.disabled = false;
-          payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
-          statusText.innerText = "Payment failed. Try another method.";
+          btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
+          statusText.innerText = "Payment cancelled or failed";
         });
 
         rzp.open();
 
       } catch (err) {
-        console.error("Payment error:", err);
-        showError(err.message || "Could not open checkout. Please try again.");
+        console.error("Checkout initiation error:", err);
+        displayError(err.message || "Could not open checkout. Please check your connection.");
         payBtn.disabled = false;
-        payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
+        btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
         statusText.innerText = "Ready for instant access";
       }
     }
