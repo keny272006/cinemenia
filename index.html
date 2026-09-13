@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cinemenia • Premier Access</title>
   
-  <!-- Modern Typography -->
+  <!-- Preconnect to Razorpay & Google Fonts for instant load -->
+  <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+  <link rel="preconnect" href="https://api.razorpay.com" crossorigin>
+  <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+  <link rel="dns-prefetch" href="https://api.razorpay.com">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
@@ -519,19 +523,12 @@
       box.style.display = "block";
     }
 
-    async function initiatePayment() {
-      const payBtn = document.getElementById("payButton");
-      const btnText = document.getElementById("btnText");
-      const statusText = document.getElementById("statusText");
-      const alertBox = document.getElementById("alertBox");
-      alertBox.style.display = "none";
+    // Background Order Pre-generation (eliminates click latency)
+    let preloadedOrderData = null;
+    let preloadPromise = null;
 
-      payBtn.disabled = true;
-      btnText.innerText = "Connecting to Gateway...";
-      statusText.innerText = "Opening secure checkout...";
-
+    async function fetchOrder() {
       try {
-        // Step 1: Create Order via serverless backend
         const res = await fetch("/api/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -541,14 +538,59 @@
             list: playlistId
           })
         });
+        if (res.ok) {
+          preloadedOrderData = await res.json();
+          return preloadedOrderData;
+        }
+      } catch (err) {
+        console.warn("Preload error:", err);
+      }
+      return null;
+    }
 
-        const orderData = await res.json();
+    // Start pre-generating order silently in background on page load
+    if (rawListId) {
+      preloadPromise = fetchOrder();
+    }
 
-        if (!res.ok || !orderData.order_id) {
-          throw new Error(orderData.error || "Failed to initialize payment. Please retry.");
+    async function initiatePayment() {
+      const payBtn = document.getElementById("payButton");
+      const btnText = document.getElementById("btnText");
+      const statusText = document.getElementById("statusText");
+      const alertBox = document.getElementById("alertBox");
+      alertBox.style.display = "none";
+
+      payBtn.disabled = true;
+
+      try {
+        // Step 1: Use preloaded order (Instant 0ms) or await active request
+        let orderData = preloadedOrderData;
+        if (!orderData && preloadPromise) {
+          btnText.innerText = "Connecting...";
+          orderData = await preloadPromise;
         }
 
-        // Step 2: Open In-Page Razorpay Modal Directly
+        // Fallback: If not ready yet, fetch now
+        if (!orderData || !orderData.order_id) {
+          btnText.innerText = "Connecting...";
+          statusText.innerText = "Opening secure checkout...";
+          const res = await fetch("/api/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: amountNum,
+              title: rawTitle || "Cinemenia Access",
+              list: playlistId
+            })
+          });
+          orderData = await res.json();
+        }
+
+        if (!orderData || !orderData.order_id) {
+          throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment. Please retry.");
+        }
+
+        // Step 2: Open In-Page Razorpay Modal Immediately
         const options = {
           key: orderData.key_id || RAZORPAY_KEY_ID,
           amount: orderData.amount,
