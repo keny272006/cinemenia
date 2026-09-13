@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>cinemenia - VIP Access</title>
+  <title>cinemenia - Instant Access</title>
+  <!-- Razorpay Official Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -12,7 +14,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background: #0b0f19;
+      background: #080c14;
       color: #ffffff;
       display: flex;
       align-items: center;
@@ -21,33 +23,49 @@
       padding: 20px;
     }
     .card {
-      background: #161f30;
-      border: 1px solid #243049;
-      border-radius: 18px;
-      padding: 26px 20px;
-      max-width: 400px;
+      background: #111827;
+      border: 1px solid #1f293d;
+      border-radius: 20px;
+      padding: 30px 24px;
+      max-width: 420px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
     }
     .brand {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
       color: #38bdf8;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
     }
     .subtitle {
-      font-size: 13px;
+      font-size: 14px;
       color: #94a3b8;
-      margin: 6px 0 16px;
+      margin: 8px 0 20px;
+      line-height: 1.4;
+    }
+    .movie-highlight {
+      color: #f1f5f9;
+      font-weight: 600;
     }
     .amount-box {
-      background: #0b0f19;
-      border: 1px dashed #334155;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 18px;
+      background: #0a0f1d;
+      border: 1px dashed #243049;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
     }
     .amount-label {
       font-size: 11px;
@@ -57,115 +75,109 @@
       letter-spacing: 0.5px;
     }
     .amount {
-      font-size: 32px;
+      font-size: 36px;
       font-weight: 800;
       color: #22c55e;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
-    /* QR Code Container */
-    .qr-box {
-      background: #0b0f19;
-      border: 1px solid #243049;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 16px;
+    /* Benefits List */
+    .features-list {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 22px;
+      background: #0c1322;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #cbd5e1;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
-    .qr-img {
-      width: 200px;
-      height: 200px;
-      border-radius: 10px;
-      background: #ffffff;
-      padding: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-    .qr-placeholder {
-      width: 200px;
-      height: 200px;
-      border-radius: 10px;
-      background: #111a2e;
+    .features-list li {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      color: #94a3b8;
+      gap: 10px;
+    }
+    .features-list li span {
+      font-size: 16px;
     }
 
     /* Action Buttons */
     .actions {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
     }
-    .action-btn {
+    .pay-btn {
       width: 100%;
-      padding: 14px;
-      font-size: 15px;
-      font-weight: 700;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #042410;
       transition: all 0.2s ease;
-      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(34, 197, 94, 0.35);
     }
-    .primary-btn {
-      background: #22c55e;
-      color: #052e16;
+    .pay-btn:hover {
+      background: linear-gradient(135deg, #2ae06b, #1bb553);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(34, 197, 94, 0.45);
     }
-    .primary-btn:hover {
-      background: #16a34a;
-    }
-    .secondary-btn {
-      background: #13233c;
-      color: #38bdf8;
-      border: 1.5px solid #224268;
-    }
-    .secondary-btn:hover {
-      background: #1a2f50;
-      border-color: #38bdf8;
+    .pay-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
-    /* Steps guide */
-    .steps-box {
-      background: #0e1524;
-      border-radius: 10px;
-      padding: 12px;
+    /* Supported payment badges */
+    .payment-methods {
       margin-top: 14px;
-      text-align: left;
-      font-size: 12px;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+    .method-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chip {
+      background: #172033;
+      border: 1px solid #223049;
+      padding: 3px 8px;
+      border-radius: 6px;
       color: #94a3b8;
-      line-height: 1.5;
-    }
-    .steps-box b {
-      color: #cbd5e1;
-    }
-    .steps-box ol {
-      margin-left: 18px;
-      margin-top: 4px;
+      font-weight: 600;
+      font-size: 10px;
     }
 
     /* Live status badge */
     .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       background: #112238;
       border: 1px solid #1e3a5f;
       border-radius: 20px;
-      padding: 6px 14px;
+      padding: 8px 16px;
       font-size: 12px;
       color: #38bdf8;
       font-weight: 600;
-      margin-top: 14px;
+      margin-top: 18px;
     }
     .pulse-dot {
       width: 8px;
@@ -179,58 +191,72 @@
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.85); }
     }
+
+    /* Error alert */
+    .alert-box {
+      background: #2b1115;
+      border: 1px solid #842029;
+      color: #f8d7da;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
     <div class="brand">cinemenia</div>
-    <div id="movieTitle" class="subtitle">Scan QR code to instantly unlock YouTube access</div>
+    <div id="movieTitle" class="subtitle">
+      Unlock instant access to <span class="movie-highlight">Daily Movie Explanation</span>
+    </div>
 
     <div class="amount-box">
-      <div class="amount-label">Access Fee</div>
+      <div class="amount-label">One-Time Access Fee</div>
       <div id="displayAmount" class="amount">₹15</div>
     </div>
 
-    <!-- QR Code Display -->
-    <div class="qr-box">
-      <div id="qrLoading" class="qr-placeholder">Generating Secure QR...</div>
-      <img id="qrImage" class="qr-img" src="" alt="UPI Payment QR" style="display:none;" />
-      <div style="font-size:12px; color:#cbd5e1; font-weight:600;">Scan with PhonePe, GPay, Paytm or BHIM</div>
-    </div>
+    <ul class="features-list">
+      <li><span>🎬</span> Complete, uncut explanation video</li>
+      <li><span>⚡</span> Instant YouTube redirect right after payment</li>
+      <li><span>🔒</span> 100% Secure Checkout via Razorpay</li>
+    </ul>
 
     <!-- Action Buttons -->
     <div class="actions">
-      <!-- 1. Direct App Open (UPI Intent) -->
-      <a id="openAppBtn" class="action-btn primary-btn" href="#">
-        🚀 Tap to Open in UPI App
-      </a>
-
-      <!-- 2. Copy UPI ID Button -->
-      <button id="copyUpiBtn" class="action-btn secondary-btn" type="button" onclick="copyUpi()">
-        📋 Copy UPI ID: 7490086192@fam
+      <button id="payBtn" class="pay-btn" type="button" onclick="startPayment()">
+        ⚡ Pay ₹15 & Watch Instantly
       </button>
     </div>
+
+    <div id="errorAlert" class="alert-box"></div>
 
     <!-- Live Polling Status -->
     <div class="status-badge" id="statusBadge">
       <div class="pulse-dot"></div>
-      <span id="statusText">Waiting for payment...</span>
+      <span id="statusText">Ready for instant access</span>
     </div>
 
-    <!-- Instructions for buyers on same phone -->
-    <div class="steps-box">
-      <b>📱 Paying on this same phone?</b>
-      <ol>
-        <li><b>Take a screenshot</b> of the QR code above.</li>
-        <li>Open <b>PhonePe / Google Pay / Paytm</b>.</li>
-        <li>Tap the <b>Scanner icon</b> ➔ tap <b>Gallery</b> ➔ select the screenshot.</li>
-        <li>Pay <b><span class="step-amt">₹15</span></b> ➔ This page redirects to YouTube automatically!</li>
-      </ol>
+    <!-- Payment Badges -->
+    <div class="payment-methods">
+      <span>Supported Payment Methods:</span>
+      <div class="method-chips">
+        <span class="chip">Google Pay</span>
+        <span class="chip">PhonePe</span>
+        <span class="chip">Paytm</span>
+        <span class="chip">UPI QR</span>
+        <span class="chip">Cards</span>
+      </div>
     </div>
   </div>
 
   <script>
+    // Configuration
+    const RAZORPAY_KEY_ID = "rzp_live_Tbb8qpq1Uclr7z";
+
     // 1. Read URL Parameters (?list=...&price=...&title=...)
     const urlParams = new URLSearchParams(window.location.search);
     const rawListId = urlParams.get("list");
@@ -239,123 +265,107 @@
 
     const payAmount = Math.max(1, parseFloat(rawPrice) || 15);
     document.getElementById("displayAmount").innerText = "₹" + payAmount;
-    document.querySelectorAll(".step-amt").forEach(el => el.innerText = "₹" + payAmount);
+    document.getElementById("payBtn").innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
 
     if (rawTitle) {
-      document.getElementById("movieTitle").innerText = `Unlock ${decodeURIComponent(rawTitle)} on YouTube`;
+      document.getElementById("movieTitle").innerHTML = 
+        `Unlock <span class="movie-highlight">${decodeURIComponent(rawTitle)}</span> on YouTube`;
     }
 
     if (!rawListId) {
-      alert("Error: Missing playlist link parameter (?list=). Please check the link sent in your DM.");
+      showError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
     }
 
     const playlistId = encodeURIComponent((rawListId || "").trim());
     const safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
 
-    let activeOrderId = null;
-    let pollInterval = null;
+    function showError(msg) {
+      const err = document.getElementById("errorAlert");
+      err.innerText = msg;
+      err.style.display = "block";
+    }
 
-    // 2. Initialize Order Automatically on Page Load
-    async function initOrder() {
+    // 2. Trigger Razorpay Payment
+    async function startPayment() {
+      const payBtn = document.getElementById("payBtn");
       const statusText = document.getElementById("statusText");
-      const qrLoading = document.getElementById("qrLoading");
-      const qrImage = document.getElementById("qrImage");
-      const openAppBtn = document.getElementById("openAppBtn");
+      const errBox = document.getElementById("errorAlert");
+      errBox.style.display = "none";
+
+      payBtn.disabled = true;
+      payBtn.innerText = "⏳ Opening Secure Checkout...";
+      statusText.innerText = "Connecting to Razorpay...";
 
       try {
-        const response = await fetch("https://famgateway.in/api/create-order.php", {
+        // Step A: Request Order ID from our serverless backend
+        const orderRes = await fetch("/api/create-order", {
           method: "POST",
-          headers: {
-            "Authorization": "Bearer fam_57d7a34c06bb4cbca3636499091f296b3e009331",
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: payAmount,
-            redirect_url: safeRedirectUrl
+            title: rawTitle || "Movie Access",
+            list: playlistId
           })
         });
 
-        const data = await response.json();
+        const orderData = await orderRes.json();
 
-        if (data && data.data && data.data.order_id) {
-          activeOrderId = data.data.order_id;
-          const qrUrl = data.data.qr_url;
-          const upiIntent = data.data.upi_intent || "";
-
-          // Show QR image
-          qrImage.src = qrUrl;
-          qrImage.onload = () => {
-            qrLoading.style.display = "none";
-            qrImage.style.display = "block";
-          };
-
-          // Clean intent (remove merchant reference 'tr' for personal P2P handle)
-          const upiParams = upiIntent.replace(/^upi:\/\/pay\?/, "");
-          const parsedParams = new URLSearchParams(upiParams);
-          parsedParams.delete("tr");
-          const cleanUpiUrl = `upi://pay?${parsedParams.toString()}`;
-
-          // Set direct app button link
-          openAppBtn.href = cleanUpiUrl;
-
-          // Start checking payment status automatically
-          startPolling(activeOrderId, safeRedirectUrl);
-
-        } else {
-          qrLoading.innerText = "Error loading QR. Please refresh.";
-          statusText.innerText = "Gateway error: " + (data.message || "Failed to load order");
+        if (!orderRes.ok || !orderData.order_id) {
+          throw new Error(orderData.error || "Failed to initialize payment order.");
         }
 
-      } catch (err) {
-        console.error("Order init error:", err);
-        qrLoading.innerText = "Network issue. Tap refresh.";
-        statusText.innerText = "Connection error. Please refresh.";
-      }
-    }
-
-    // 3. Background Status Polling
-    function startPolling(orderId, redirectUrl) {
-      if (pollInterval) clearInterval(pollInterval);
-
-      pollInterval = setInterval(async () => {
-        try {
-          const res = await fetch(`https://famgateway.in/api/checkout-status.php?order_id=${encodeURIComponent(orderId)}`);
-          const data = await res.json();
-
-          if (data.status === "success") {
-            clearInterval(pollInterval);
+        // Step B: Open Razorpay Checkout Modal
+        const options = {
+          key: orderData.key_id || RAZORPAY_KEY_ID,
+          amount: orderData.amount,
+          currency: orderData.currency || "INR",
+          name: "cinemenia",
+          description: rawTitle ? decodeURIComponent(rawTitle) : "Daily Movie Explanation",
+          order_id: orderData.order_id,
+          handler: function (response) {
+            // Payment success callback
             const badge = document.getElementById("statusBadge");
-            const text = document.getElementById("statusText");
             badge.style.background = "#052e16";
             badge.style.borderColor = "#22c55e";
-            text.style.color = "#22c55e";
-            text.innerText = "✅ Payment Received! Unlocking YouTube...";
+            statusText.style.color = "#22c55e";
+            statusText.innerText = "✅ Payment Successful! Unlocking YouTube...";
+            payBtn.innerText = "✅ Payment Received!";
+
             setTimeout(() => {
-              window.location.href = redirectUrl;
-            }, 1000);
+              window.location.href = safeRedirectUrl;
+            }, 1200);
+          },
+          prefill: {},
+          theme: {
+            color: "#22c55e"
+          },
+          modal: {
+            ondismiss: function () {
+              payBtn.disabled = false;
+              payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
+              statusText.innerText = "Payment cancelled. You can try again.";
+            }
           }
-        } catch (e) {
-          // Keep polling silently
-        }
-      }, 2500);
-    }
+        };
 
-    // 4. Copy UPI ID Helper
-    function copyUpi() {
-      navigator.clipboard.writeText("7490086192@fam");
-      const btn = document.getElementById("copyUpiBtn");
-      btn.innerText = "✅ Copied: 7490086192@fam";
-      btn.style.borderColor = "#22c55e";
-      btn.style.color = "#22c55e";
-      setTimeout(() => {
-        btn.innerText = "📋 Copy UPI ID: 7490086192@fam";
-        btn.style.borderColor = "#224268";
-        btn.style.color = "#38bdf8";
-      }, 2500);
-    }
+        const rzp = new Razorpay(options);
+        rzp.on("payment.failed", function (response) {
+          showError("Payment Failed: " + (response.error.description || "Please try again."));
+          payBtn.disabled = false;
+          payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
+          statusText.innerText = "Payment failed. Try another method.";
+        });
 
-    // Launch immediately on page load
-    initOrder();
+        rzp.open();
+
+      } catch (err) {
+        console.error("Payment error:", err);
+        showError(err.message || "Could not open checkout. Please try again.");
+        payBtn.disabled = false;
+        payBtn.innerText = `⚡ Pay ₹${payAmount} & Watch Instantly`;
+        statusText.innerText = "Ready for instant access";
+      }
+    }
   </script>
 </body>
 </html>
