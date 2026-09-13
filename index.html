@@ -526,24 +526,37 @@
       statusText.innerText = "Opening secure checkout...";
 
       try {
-        // Step 1: Create Order via serverless backend
+        // Step 1: Create 1-Tap Payment Link via serverless backend
         const res = await fetch("/api/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: amountNum,
             title: rawTitle || "Cinemenia Access",
-            list: playlistId
+            list: playlistId,
+            redirect_url: safeRedirectUrl
           })
         });
 
         const orderData = await res.json();
 
-        if (!res.ok || !orderData.order_id) {
+        if (!res.ok) {
           throw new Error(orderData.error || "Failed to initialize payment. Please retry.");
         }
 
-        // Step 2: Launch Official Razorpay Checkout Modal
+        // Direct 1-Tap UPI: No phone number prompt!
+        if (orderData.payment_url) {
+          btnText.innerText = "Opening UPI...";
+          statusText.innerText = "Opening secure UPI checkout...";
+          window.location.href = orderData.payment_url;
+          return;
+        }
+
+        if (!orderData.order_id) {
+          throw new Error("Invalid response from payment gateway.");
+        }
+
+        // Fallback: Launch Official Razorpay Checkout Modal
         const options = {
           key: orderData.key_id || RAZORPAY_KEY_ID,
           amount: orderData.amount,

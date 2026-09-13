@@ -18,9 +18,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { amount, title, list } = req.body || {};
+    const { amount, title, list, redirect_url } = req.body || {};
     
-    // Environment variables or fallback Key ID
+    // Environment variables
     const keyId = process.env.RAZORPAY_KEY_ID || "rzp_live_Tbb8qpq1Uclr7z";
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -32,10 +32,45 @@ export default async function handler(req, res) {
 
     const payAmount = Math.max(1, parseFloat(amount) || 15);
     const amountInPaise = Math.round(payAmount * 100);
-
     const authHeader = "Basic " + Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const movieTitle = (title || "Cinemenia Premier Access").substring(0, 30);
+    const callbackUrl = redirect_url || `https://www.youtube.com/playlist?list=${encodeURIComponent(list || "")}&unlocked=true`;
 
-    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
+    // 1. Create a 1-Tap Razorpay Payment Link (No phone number required from customer)
+    const linkResponse = await fetch("https://api.razorpay.com/v1/payment_links", {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        amount: amountInPaise,
+        currency: "INR",
+        accept_partial: false,
+        description: movieTitle,
+        callback_url: callbackUrl,
+        callback_method: "get",
+        notes: {
+          title: movieTitle,
+          list: (list || "").substring(0, 30)
+        }
+      })
+    });
+
+    const linkData = await linkResponse.json();
+
+    if (linkResponse.ok && linkData.short_url) {
+      return res.status(200).json({
+        payment_url: linkData.short_url,
+        order_id: linkData.order_id,
+        amount: amountInPaise,
+        currency: "INR",
+        key_id: keyId
+      });
+    }
+
+    // 2. Fallback: Create Standard Order if Payment Link isn't available
+    const orderResponse = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
         "Authorization": authHeader,
@@ -46,27 +81,28 @@ export default async function handler(req, res) {
         currency: "INR",
         receipt: `rcpt_${Date.now()}`,
         notes: {
-          title: (title || "VIP Access").substring(0, 30),
+          title: movieTitle,
           list: (list || "").substring(0, 30)
         }
       })
     });
 
-    const data = await razorpayResponse.json();
+    const orderData = await orderResponse.json();
 
-    if (!razorpayResponse.ok) {
-      const errorMsg = data.error ? data.error.description : "Failed to create Razorpay order";
-      return res.status(razorpayResponse.status).json({ error: errorMsg });
+    if (!orderResponse.ok) {
+      const errorMsg = orderData.error ? orderData.error.description : "Failed to initialize payment gateway.";
+      return res.status(orderResponse.status).json({ error: errorMsg });
     }
 
     return res.status(200).json({
-      order_id: data.id,
-      amount: data.amount,
-      currency: data.currency,
+      order_id: orderData.id,
+      amount: orderData.amount,
+      currency: orderData.currency,
       key_id: keyId
     });
+
   } catch (err) {
-    console.error("Razorpay order creation error:", err);
+    console.error("Razorpay API error:", err);
     return res.status(500).json({ error: err.message || "Internal server error" });
   }
 }
