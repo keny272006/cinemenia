@@ -598,6 +598,32 @@
           name: "Cinemenia",
           description: rawTitle ? decodeURIComponent(rawTitle) : "Premier Movie Access",
           order_id: orderData.order_id,
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: "Pay via UPI (PhonePe, GPay, Paytm, QR)",
+                  instruments: [
+                    {
+                      method: "upi"
+                    }
+                  ]
+                },
+                other: {
+                  name: "Other Payment Options",
+                  instruments: [
+                    { method: "card" },
+                    { method: "netbanking" },
+                    { method: "wallet" }
+                  ]
+                }
+              },
+              sequence: ["block.upi", "block.other"],
+              preferences: {
+                show_default_blocks: true
+              }
+            }
+          },
           handler: function (response) {
             // Payment success callback
             const badge = document.getElementById("statusBadge");
