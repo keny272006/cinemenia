@@ -491,6 +491,8 @@
     const rawPrice = urlParams.get("price") || urlParams.get("p") || "15";
     const rawTitle = urlParams.get("title");
 
+    const rawSi = urlParams.get("si");
+
     const amountNum = Math.max(1, parseFloat(rawPrice) || 15);
     document.getElementById("priceDisplay").innerText = "₹" + amountNum;
     document.getElementById("originalPrice").innerText = "₹" + (amountNum * 5);
@@ -506,7 +508,10 @@
     }
 
     const playlistId = encodeURIComponent((rawListId || "").trim());
-    const safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
+    let safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
+    if (rawSi) {
+      safeRedirectUrl += `&si=${encodeURIComponent(rawSi.trim())}`;
+    }
 
     function displayError(message) {
       const box = document.getElementById("alertBox");
@@ -526,37 +531,24 @@
       statusText.innerText = "Opening secure checkout...";
 
       try {
-        // Step 1: Create 1-Tap Payment Link via serverless backend
+        // Step 1: Create Order via serverless backend
         const res = await fetch("/api/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: amountNum,
             title: rawTitle || "Cinemenia Access",
-            list: playlistId,
-            redirect_url: safeRedirectUrl
+            list: playlistId
           })
         });
 
         const orderData = await res.json();
 
-        if (!res.ok) {
+        if (!res.ok || !orderData.order_id) {
           throw new Error(orderData.error || "Failed to initialize payment. Please retry.");
         }
 
-        // Direct 1-Tap UPI: No phone number prompt!
-        if (orderData.payment_url) {
-          btnText.innerText = "Opening UPI...";
-          statusText.innerText = "Opening secure UPI checkout...";
-          window.location.href = orderData.payment_url;
-          return;
-        }
-
-        if (!orderData.order_id) {
-          throw new Error("Invalid response from payment gateway.");
-        }
-
-        // Fallback: Launch Official Razorpay Checkout Modal
+        // Step 2: Open In-Page Razorpay Modal Directly
         const options = {
           key: orderData.key_id || RAZORPAY_KEY_ID,
           amount: orderData.amount,
