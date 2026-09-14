@@ -52,15 +52,6 @@ export default async function handler(req, res) {
         reference_id: `rcpt_${Date.now()}`,
         callback_url: callbackUrl,
         callback_method: "get",
-        customer: {
-          name: "Cinemenia Viewer",
-          email: "viewer@cinemenia.com",
-          contact: "+919999999999"
-        },
-        notify: {
-          sms: false,
-          email: false
-        },
         notes: {
           title: movieTitle,
           list: (list || "").substring(0, 30)
