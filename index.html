@@ -461,6 +461,26 @@
       safeRedirectUrl += `&si=${encodeURIComponent(rawSi.trim())}`;
     }
 
+    function openYouTubePlaylist() {
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (isAndroid) {
+        // Direct Android Intent to launch native YouTube app directly to the playlist
+        const intentUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(safeRedirectUrl)};end`;
+        window.location.replace(intentUrl);
+      } else if (isIOS) {
+        // iOS Deep Link Scheme
+        window.location.replace(`youtube://www.youtube.com/playlist?list=${playlistId}`);
+        setTimeout(() => {
+          window.location.replace(safeRedirectUrl);
+        }, 500);
+      } else {
+        // Desktop / Laptop browsers
+        window.location.replace(safeRedirectUrl);
+      }
+    }
+
     function displayError(message) {
       const box = document.getElementById("alertBox");
       box.innerText = message;
@@ -561,23 +581,27 @@
             }
           },
           handler: function (response) {
-            // Payment success callback
+            // Instant payment success callback
             const badge = document.getElementById("statusBadge");
             badge.style.background = "rgba(16, 185, 129, 0.15)";
             badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
             statusText.style.color = "#10b981";
-            statusText.innerText = "✅ Payment Verified! Redirecting to YouTube...";
-            btnText.innerText = "Redirecting...";
+            statusText.innerText = "✅ Payment Verified! Opening YouTube App...";
+            
+            payBtn.disabled = false;
+            payBtn.onclick = openYouTubePlaylist;
+            payBtn.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+            btnText.innerText = "▶️ Open in YouTube App";
 
-            setTimeout(() => {
-              window.location.href = safeRedirectUrl;
-            }, 300);
+            // Instant 0ms launch of native YouTube app
+            openYouTubePlaylist();
           },
           prefill: {},
           theme: {
             color: "#10b981"
           },
           modal: {
+            animation: false,
             ondismiss: function () {
               payBtn.disabled = false;
               btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
