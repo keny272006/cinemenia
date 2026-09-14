@@ -458,7 +458,7 @@
     }
 
     const playlistId = encodeURIComponent((rawListId || "").trim());
-    let safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}&unlocked=true`;
+    let safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
     if (rawSi) {
       safeRedirectUrl += `&si=${encodeURIComponent(rawSi.trim())}`;
     }
