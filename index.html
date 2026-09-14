@@ -579,6 +579,49 @@
       }
     }
 
+    // Automatic real-time status checker for pending payments
+    let activePollInterval = null;
+
+    async function verifyStatusWithServer(transactionId) {
+      if (!transactionId) return false;
+      try {
+        const res = await fetch(`/api/check-status?id=${encodeURIComponent(transactionId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.paid) {
+            if (rawListId) localStorage.setItem("cinemenia_paid_" + rawListId, "true");
+            unlockAccessUI();
+            if (activePollInterval) clearInterval(activePollInterval);
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn("Status check failed:", err);
+      }
+      return false;
+    }
+
+    function checkActivePayment() {
+      const pendingId = localStorage.getItem("cinemenia_active_tx_id");
+      if (pendingId) {
+        verifyStatusWithServer(pendingId);
+      }
+    }
+
+    // Check automatically when user switches back from PhonePe to browser tab
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        checkActivePayment();
+      }
+    });
+    window.addEventListener("focus", checkActivePayment);
+
+    // Initial check on load if a transaction was initiated
+    const lastTxId = localStorage.getItem("cinemenia_active_tx_id");
+    if (!isPaid && lastTxId) {
+      verifyStatusWithServer(lastTxId);
+    }
+
     if (isPaid) {
       unlockAccessUI();
     } else if (isFailedOrCancelled) {
@@ -632,11 +675,11 @@
       const btnText = document.getElementById("btnText");
       const statusText = document.getElementById("statusText");
       const alertBox = document.getElementById("alertBox");
-      alertBox.style.display = "none";
+      if (alertBox) alertBox.style.display = "none";
 
       payBtn.disabled = true;
-      btnText.innerText = "Connecting to UPI...";
-      statusText.innerText = "Launching PhonePe / UPI app...";
+      btnText.innerText = "Launching PhonePe...";
+      statusText.innerText = "Opening UPI app...";
 
       try {
         // Step 1: Use preloaded payment link (Instant 0ms) or await active request
@@ -663,6 +706,35 @@
         if (!orderData || !orderData.payment_url) {
           throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment link. Please retry.");
         }
+
+        // Save transaction ID for background verification
+        if (orderData.id) {
+          localStorage.setItem("cinemenia_active_tx_id", orderData.id);
+        }
+
+        // Start polling server in background every 2 seconds
+        if (activePollInterval) clearInterval(activePollInterval);
+        activePollInterval = setInterval(() => {
+          verifyStatusWithServer(orderData.id);
+        }, 2000);
+
+        // Update button to allow user to re-check or retry if needed
+        setTimeout(() => {
+          if (payBtn && !document.getElementById("watchBtn")) {
+            payBtn.disabled = false;
+            btnText.innerText = "🔄 I Have Paid (Check Status)";
+            statusText.innerText = "Waiting for PhonePe confirmation...";
+            payBtn.onclick = () => {
+              btnText.innerText = "Checking...";
+              verifyStatusWithServer(orderData.id).then(paid => {
+                if (!paid) {
+                  btnText.innerText = "🔄 I Have Paid (Check Status)";
+                  displayError("Payment not confirmed yet. If you completed payment, please wait 3-5 seconds and click again.");
+                }
+              });
+            };
+          }
+        }, 3500);
 
         // DIRECT REDIRECT: Triggers native UPI apps (PhonePe, GPay) directly on mobile WITHOUT Razorpay checkout modal!
         window.location.href = orderData.payment_url;
