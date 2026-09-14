@@ -535,21 +535,24 @@
     // Configuration
     const RAZORPAY_KEY_ID = "rzp_live_Tbb8qpq1Uclr7z";
 
-    // Parse URL & Hash Parameters (handling both search & hash callbacks)
+    // Clear legacy test lock-in cache so fresh page visits never get permanently stuck
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("cinemenia_paid_") || key.startsWith("cinemenia_active_") || key.startsWith("cinemenia_last_")) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {}
+
+    // Parse URL & Hash Parameters
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ''));
 
-    // Persistent Storage to recover parameters if payment gateway redirect trims query params
-    const rawListId = urlParams.get("list") || localStorage.getItem("cinemenia_active_list") || "";
-    const rawPrice = urlParams.get("price") || urlParams.get("p") || localStorage.getItem("cinemenia_active_price") || "15";
-    const rawTitle = urlParams.get("title") || localStorage.getItem("cinemenia_active_title") || "";
-    const rawSi = urlParams.get("si") || localStorage.getItem("cinemenia_active_si") || "";
-
-    // Save to localStorage immediately
-    if (rawListId) localStorage.setItem("cinemenia_active_list", rawListId);
-    if (rawTitle) localStorage.setItem("cinemenia_active_title", rawTitle);
-    if (rawSi) localStorage.setItem("cinemenia_active_si", rawSi);
-    if (rawPrice) localStorage.setItem("cinemenia_active_price", rawPrice);
+    // Strictly read current link parameters from URL
+    const rawListId = (urlParams.get("list") || sessionStorage.getItem("cinemenia_temp_list") || "").trim();
+    const rawPrice = urlParams.get("price") || urlParams.get("p") || sessionStorage.getItem("cinemenia_temp_price") || "15";
+    const rawTitle = urlParams.get("title") || sessionStorage.getItem("cinemenia_temp_title") || "";
+    const rawSi = urlParams.get("si") || sessionStorage.getItem("cinemenia_temp_si") || "";
 
     const amountNum = Math.max(1, parseFloat(rawPrice) || 15);
     const priceDisplay = document.getElementById("priceDisplay");
@@ -569,7 +572,7 @@
       }
     }
 
-    const playlistId = encodeURIComponent((rawListId || "").trim());
+    const playlistId = encodeURIComponent(rawListId);
     let safeRedirectUrl = playlistId 
       ? `https://www.youtube.com/playlist?list=${playlistId}` 
       : `https://www.youtube.com/`;
@@ -585,7 +588,7 @@
       }
     }
 
-    // Auto-unlock detection: Strictly checks verified Razorpay payment proof
+    // Auto-unlock detection: Strictly requires payment ID (pay_...) or status=paid in URL
     const paymentId = urlParams.get("razorpay_payment_id") || 
                       hashParams.get("razorpay_payment_id") || 
                       urlParams.get("payment_id");
@@ -594,18 +597,10 @@
                          hashParams.get("razorpay_payment_link_status") ||
                          urlParams.get("status") || "").toLowerCase();
 
-    // If transaction was explicitly cancelled, failed, or expired - NEVER unlock!
     const isFailedOrCancelled = statusParam === "cancelled" || statusParam === "failed" || statusParam === "expired";
 
-    // Valid proof requires Razorpay's authentic payment ID (pay_...) or verified paid status
-    const hasValidPaymentProof = Boolean(paymentId && paymentId.startsWith("pay_")) || statusParam === "paid";
-    const wasPreviouslyVerified = Boolean(rawListId && localStorage.getItem("cinemenia_paid_" + rawListId) === "true");
-
-    const isPaid = !isFailedOrCancelled && (hasValidPaymentProof || wasPreviouslyVerified);
-
-    if (isPaid && rawListId && hasValidPaymentProof) {
-      localStorage.setItem("cinemenia_paid_" + rawListId, "true");
-    }
+    // Unlocked ONLY if current URL contains authentic payment confirmation
+    const isPaid = !isFailedOrCancelled && (Boolean(paymentId && paymentId.startsWith("pay_")) || statusParam === "paid");
 
     function copyPlaylistLink(url) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -732,7 +727,7 @@
       }
     }
 
-    // Automatic real-time status checker for pending payments
+    // Automatic real-time status checker for pending payments in this active session
     let activePollInterval = null;
 
     async function verifyStatusWithServer(transactionId) {
@@ -742,7 +737,7 @@
         if (res.ok) {
           const data = await res.json();
           if (data.paid) {
-            if (rawListId) localStorage.setItem("cinemenia_paid_" + rawListId, "true");
+            sessionStorage.removeItem("cinemenia_active_tx_id");
             unlockAccessUI();
             if (activePollInterval) clearInterval(activePollInterval);
             return true;
@@ -755,7 +750,7 @@
     }
 
     function checkActivePayment() {
-      const pendingId = localStorage.getItem("cinemenia_active_tx_id");
+      const pendingId = sessionStorage.getItem("cinemenia_active_tx_id");
       if (pendingId) {
         verifyStatusWithServer(pendingId);
       }
@@ -769,10 +764,14 @@
     });
     window.addEventListener("focus", checkActivePayment);
 
-    // Initial check on load if a transaction was initiated
-    const lastTxId = localStorage.getItem("cinemenia_active_tx_id");
-    if (!isPaid && lastTxId) {
-      verifyStatusWithServer(lastTxId);
+    // On fresh visits (no payment callback params), clear any leftover session transactions
+    if (!paymentId && !statusParam) {
+      sessionStorage.removeItem("cinemenia_active_tx_id");
+    } else {
+      const currentSessionTx = sessionStorage.getItem("cinemenia_active_tx_id");
+      if (!isPaid && currentSessionTx) {
+        verifyStatusWithServer(currentSessionTx);
+      }
     }
 
     if (isPaid) {
@@ -860,9 +859,9 @@
           throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment link. Please retry.");
         }
 
-        // Save transaction ID for background verification
+        // Save transaction ID in session for background verification
         if (orderData.id) {
-          localStorage.setItem("cinemenia_active_tx_id", orderData.id);
+          sessionStorage.setItem("cinemenia_active_tx_id", orderData.id);
         }
 
         // Start polling server in background every 2 seconds
