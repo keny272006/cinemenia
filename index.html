@@ -451,50 +451,81 @@
     // Configuration
     const RAZORPAY_KEY_ID = "rzp_live_Tbb8qpq1Uclr7z";
 
-    // Parse URL Parameters
+    // Parse URL & Hash Parameters (handling both search & hash callbacks)
     const urlParams = new URLSearchParams(window.location.search);
-    const rawListId = urlParams.get("list");
-    const rawPrice = urlParams.get("price") || urlParams.get("p") || "15";
-    const rawTitle = urlParams.get("title");
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ''));
 
-    const rawSi = urlParams.get("si");
+    // Persistent Storage to recover parameters if payment gateway redirect trims query params
+    const rawListId = urlParams.get("list") || localStorage.getItem("cinemenia_active_list") || "";
+    const rawPrice = urlParams.get("price") || urlParams.get("p") || localStorage.getItem("cinemenia_active_price") || "15";
+    const rawTitle = urlParams.get("title") || localStorage.getItem("cinemenia_active_title") || "";
+    const rawSi = urlParams.get("si") || localStorage.getItem("cinemenia_active_si") || "";
+
+    // Save to localStorage immediately
+    if (rawListId) localStorage.setItem("cinemenia_active_list", rawListId);
+    if (rawTitle) localStorage.setItem("cinemenia_active_title", rawTitle);
+    if (rawSi) localStorage.setItem("cinemenia_active_si", rawSi);
+    if (rawPrice) localStorage.setItem("cinemenia_active_price", rawPrice);
 
     const amountNum = Math.max(1, parseFloat(rawPrice) || 15);
-    document.getElementById("priceDisplay").innerText = "₹" + amountNum;
-    document.getElementById("originalPrice").innerText = "₹" + (amountNum * 5);
-    document.getElementById("btnText").innerText = `Pay ₹${amountNum} & Watch Now`;
+    const priceDisplay = document.getElementById("priceDisplay");
+    if (priceDisplay) priceDisplay.innerText = "₹" + amountNum;
+    const originalPrice = document.getElementById("originalPrice");
+    if (originalPrice) originalPrice.innerText = "₹" + (amountNum * 5);
+    const btnText = document.getElementById("btnText");
+    if (btnText) btnText.innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
 
     if (rawTitle) {
-      document.getElementById("movieHeading").innerHTML = 
-        `Unlock <span class="movie-highlight">${decodeURIComponent(rawTitle)}</span>`;
-    }
-
-    if (!rawListId) {
-      displayError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
+      try {
+        const decodedTitle = decodeURIComponent(rawTitle);
+        const heading = document.getElementById("movieHeading");
+        if (heading) heading.innerHTML = `Unlock <span class="movie-highlight">${decodedTitle}</span>`;
+      } catch (e) {
+        console.warn("Could not decode title:", e);
+      }
     }
 
     const playlistId = encodeURIComponent((rawListId || "").trim());
-    let safeRedirectUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
-    if (rawSi) {
+    let safeRedirectUrl = playlistId 
+      ? `https://www.youtube.com/playlist?list=${playlistId}` 
+      : `https://www.youtube.com/`;
+    if (rawSi && playlistId) {
       safeRedirectUrl += `&si=${encodeURIComponent(rawSi.trim())}`;
     }
 
     function displayError(message) {
       const box = document.getElementById("alertBox");
-      box.innerText = message;
-      box.style.display = "block";
+      if (box) {
+        box.innerText = message;
+        box.style.display = "block";
+      }
     }
 
-    // Auto-unlock if user is returning from successful Razorpay payment
-    const paymentId = urlParams.get("razorpay_payment_id");
-    const statusParam = urlParams.get("status") || urlParams.get("razorpay_payment_link_status");
-    const isPaid = paymentId || statusParam === "paid";
+    // Auto-unlock detection: Checks Razorpay callback fields or saved paid status
+    const paymentId = urlParams.get("razorpay_payment_id") || 
+                      hashParams.get("razorpay_payment_id") || 
+                      urlParams.get("payment_id");
+
+    const statusParam = urlParams.get("status") || 
+                        urlParams.get("razorpay_payment_link_status") || 
+                        hashParams.get("razorpay_payment_link_status");
+
+    const linkId = urlParams.get("razorpay_payment_link_id") || 
+                   hashParams.get("razorpay_payment_link_id");
+
+    const isPaid = !!(paymentId || statusParam === "paid" || linkId || (rawListId && localStorage.getItem("cinemenia_paid_" + rawListId) === "true"));
+
+    if (isPaid && rawListId) {
+      localStorage.setItem("cinemenia_paid_" + rawListId, "true");
+    }
 
     function unlockAccessUI() {
       const priceBox = document.querySelector(".price-ticket");
       if (priceBox) priceBox.style.display = "none";
       const microPerks = document.querySelector(".micro-perks");
       if (microPerks) microPerks.style.display = "none";
+      const alertBox = document.getElementById("alertBox");
+      if (alertBox) alertBox.style.display = "none";
 
       const movieHeading = document.getElementById("movieHeading");
       if (movieHeading) {
@@ -502,7 +533,7 @@
       }
       const movieDesc = document.querySelector(".movie-desc");
       if (movieDesc) {
-        movieDesc.innerHTML = `Payment confirmed. Tap the red button below to start watching on your <b>YouTube App</b>.`;
+        movieDesc.innerHTML = `Payment confirmed. Tap the button below to start watching on your <b>YouTube App</b>.`;
       }
 
       const badge = document.getElementById("statusBadge");
@@ -519,10 +550,12 @@
       const isAndroid = /Android/i.test(navigator.userAgent);
       const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       let appUrl = safeRedirectUrl;
-      if (isAndroid) {
-        appUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(safeRedirectUrl)};end`;
-      } else if (isIOS) {
-        appUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
+      if (playlistId) {
+        if (isAndroid) {
+          appUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(safeRedirectUrl)};end`;
+        } else if (isIOS) {
+          appUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
+        }
       }
 
       const payBtn = document.getElementById("payButton");
@@ -534,8 +567,9 @@
             </svg>
             <span>▶️ Watch in YouTube App</span>
           </a>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 12px; font-weight: 600;">
-            ⚡ 1-Tap instant launch into your official YouTube app
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">⚡ 1-Tap instant launch into your official YouTube app</span>
+            <a href="${safeRedirectUrl}" target="_blank" rel="noopener" style="font-size: 12px; color: #fbbf24; text-decoration: underline; font-weight: 600;">Or Open Directly in Web Browser →</a>
           </div>
         `;
       }
@@ -543,6 +577,8 @@
 
     if (isPaid) {
       unlockAccessUI();
+    } else if (!rawListId) {
+      displayError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
     }
 
     // Background Order Pre-generation (eliminates click latency)
@@ -551,7 +587,8 @@
 
     function buildCallbackUrl() {
       const base = window.location.origin + window.location.pathname;
-      let cb = `${base}?status=paid&list=${playlistId}`;
+      let cb = `${base}?status=paid`;
+      if (rawListId) cb += `&list=${playlistId}`;
       if (rawTitle) cb += `&title=${encodeURIComponent(rawTitle)}`;
       if (rawSi) cb += `&si=${encodeURIComponent(rawSi)}`;
       if (rawPrice) cb += `&price=${amountNum}`;
