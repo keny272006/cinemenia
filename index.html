@@ -501,21 +501,25 @@
       }
     }
 
-    // Auto-unlock detection: Checks Razorpay callback fields or saved paid status
+    // Auto-unlock detection: Strictly checks verified Razorpay payment proof
     const paymentId = urlParams.get("razorpay_payment_id") || 
                       hashParams.get("razorpay_payment_id") || 
                       urlParams.get("payment_id");
 
-    const statusParam = urlParams.get("status") || 
-                        urlParams.get("razorpay_payment_link_status") || 
-                        hashParams.get("razorpay_payment_link_status");
+    const statusParam = (urlParams.get("razorpay_payment_link_status") || 
+                         hashParams.get("razorpay_payment_link_status") ||
+                         urlParams.get("status") || "").toLowerCase();
 
-    const linkId = urlParams.get("razorpay_payment_link_id") || 
-                   hashParams.get("razorpay_payment_link_id");
+    // If transaction was explicitly cancelled, failed, or expired - NEVER unlock!
+    const isFailedOrCancelled = statusParam === "cancelled" || statusParam === "failed" || statusParam === "expired";
 
-    const isPaid = !!(paymentId || statusParam === "paid" || linkId || (rawListId && localStorage.getItem("cinemenia_paid_" + rawListId) === "true"));
+    // Valid proof requires Razorpay's authentic payment ID (pay_...) or verified paid status
+    const hasValidPaymentProof = Boolean(paymentId && paymentId.startsWith("pay_")) || statusParam === "paid";
+    const wasPreviouslyVerified = Boolean(rawListId && localStorage.getItem("cinemenia_paid_" + rawListId) === "true");
 
-    if (isPaid && rawListId) {
+    const isPaid = !isFailedOrCancelled && (hasValidPaymentProof || wasPreviouslyVerified);
+
+    if (isPaid && rawListId && hasValidPaymentProof) {
       localStorage.setItem("cinemenia_paid_" + rawListId, "true");
     }
 
@@ -577,6 +581,8 @@
 
     if (isPaid) {
       unlockAccessUI();
+    } else if (isFailedOrCancelled) {
+      displayError("⚠️ Payment was cancelled or not completed. Please try again to unlock your movie.");
     } else if (!rawListId) {
       displayError("Notice: Missing playlist link parameter (?list=). Please verify the link sent to you.");
     }
@@ -587,8 +593,7 @@
 
     function buildCallbackUrl() {
       const base = window.location.origin + window.location.pathname;
-      let cb = `${base}?status=paid`;
-      if (rawListId) cb += `&list=${playlistId}`;
+      let cb = `${base}?list=${playlistId}`;
       if (rawTitle) cb += `&title=${encodeURIComponent(rawTitle)}`;
       if (rawSi) cb += `&si=${encodeURIComponent(rawSi)}`;
       if (rawPrice) cb += `&price=${amountNum}`;
