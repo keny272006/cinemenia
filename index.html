@@ -368,6 +368,90 @@
       text-align: left;
       line-height: 1.4;
     }
+
+    /* Option 2: UPI App Selector Grid */
+    .payment-methods-section {
+      width: 100%;
+      margin-bottom: 6px;
+    }
+    .app-selector-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      text-align: left;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .app-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 10px 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+    .app-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .app-card.selected {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
+    }
+    .app-card-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    .app-card-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.2px;
+    }
+
+    /* QR Code Option Button */
+    .qr-toggle-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      transition: all 0.2s ease;
+    }
+    .qr-toggle-btn:hover, .qr-toggle-btn.active {
+      color: var(--accent-gold-light);
+      border-color: rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
   </style>
 </head>
 <body>
@@ -416,13 +500,45 @@
       <span>Direct YouTube Link</span>
     </div>
 
+    <!-- Option 2: UPI App Selector & QR Option -->
+    <div id="paymentMethodsSection" class="payment-methods-section">
+      <div class="app-selector-header">
+        <span>Select Payment App</span>
+        <span style="color: var(--success); font-size: 10px;">Instant 1-Tap</span>
+      </div>
+      <div class="app-grid">
+        <div class="app-card selected" id="appCardPhonePe" onclick="selectUPIApp('PhonePe', this)">
+          <div class="app-card-icon" style="background: rgba(103, 58, 183, 0.2); color: #a78bfa;">🟣</div>
+          <span class="app-card-name">PhonePe</span>
+        </div>
+        <div class="app-card" id="appCardGPay" onclick="selectUPIApp('Google Pay', this)">
+          <div class="app-card-icon" style="background: rgba(66, 133, 244, 0.2); color: #60a5fa;">🔵</div>
+          <span class="app-card-name">Google Pay</span>
+        </div>
+        <div class="app-card" id="appCardPaytm" onclick="selectUPIApp('Paytm / UPI', this)">
+          <div class="app-card-icon" style="background: rgba(0, 186, 242, 0.2); color: #38bdf8;">🔷</div>
+          <span class="app-card-name">Paytm / UPI</span>
+        </div>
+      </div>
+
+      <button type="button" id="qrToggleBtn" class="qr-toggle-btn" onclick="toggleQRMode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span id="qrToggleText">📷 Or Pay via UPI QR Code</span>
+      </button>
+    </div>
+
     <!-- Primary Action Button -->
     <button id="payButton" class="cta-button" type="button" onclick="initiatePayment()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
       </svg>
-      <span id="btnText">Unlock & Watch Now</span>
+      <span id="btnText">⚡ Pay ₹15 via PhonePe</span>
     </button>
 
     <!-- Error Box -->
@@ -515,6 +631,35 @@
       preloadPromise = fetchOrder();
     }
 
+    let selectedApp = "PhonePe";
+    let isQRMode = false;
+
+    function selectUPIApp(appName, element) {
+      isQRMode = false;
+      selectedApp = appName;
+      document.querySelectorAll(".app-card").forEach(c => c.classList.remove("selected"));
+      if (element) element.classList.add("selected");
+      
+      const qrBtn = document.getElementById("qrToggleBtn");
+      if (qrBtn) qrBtn.classList.remove("active");
+      
+      document.getElementById("btnText").innerText = `⚡ Pay ₹${amountNum} via ${appName}`;
+    }
+
+    function toggleQRMode() {
+      isQRMode = !isQRMode;
+      const qrBtn = document.getElementById("qrToggleBtn");
+      
+      if (isQRMode) {
+        document.querySelectorAll(".app-card").forEach(c => c.classList.remove("selected"));
+        if (qrBtn) qrBtn.classList.add("active");
+        document.getElementById("btnText").innerText = `📷 Pay ₹${amountNum} via UPI QR Code`;
+      } else {
+        const phonePeCard = document.getElementById("appCardPhonePe");
+        selectUPIApp("PhonePe", phonePeCard);
+      }
+    }
+
     async function initiatePayment() {
       const payBtn = document.getElementById("payButton");
       const btnText = document.getElementById("btnText");
@@ -552,7 +697,12 @@
           throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment. Please retry.");
         }
 
-        // Step 2: Open In-Page Razorpay Modal Immediately
+        // Step 2: Open Razorpay tailored to user's selected app or QR
+        const upiFlows = isQRMode ? ["qr", "intent"] : ["intent", "qr"];
+        const blockTitle = isQRMode 
+          ? `Scan UPI QR to Pay ₹${amountNum}` 
+          : `Pay ₹${amountNum} via ${selectedApp}`;
+
         const options = {
           key: orderData.key_id || RAZORPAY_KEY_ID,
           amount: orderData.amount,
@@ -564,10 +714,11 @@
             display: {
               blocks: {
                 upi: {
-                  name: "Pay via UPI (PhonePe, GPay, Paytm, QR)",
+                  name: blockTitle,
                   instruments: [
                     {
-                      method: "upi"
+                      method: "upi",
+                      flows: upiFlows
                     }
                   ]
                 }
@@ -591,11 +742,13 @@
               appUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
             }
 
-            // 1. Hide price box and perks
+            // 1. Hide price box, perks, and payment method selector
             const priceBox = document.querySelector(".price-ticket");
             if (priceBox) priceBox.style.display = "none";
             const microPerks = document.querySelector(".micro-perks");
             if (microPerks) microPerks.style.display = "none";
+            const paymentMethods = document.getElementById("paymentMethodsSection");
+            if (paymentMethods) paymentMethods.style.display = "none";
 
             // 2. Update headline and description to celebrate unlocked access
             const movieHeading = document.getElementById("movieHeading");
@@ -635,7 +788,9 @@
             animation: false,
             ondismiss: function () {
               payBtn.disabled = false;
-              btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
+              btnText.innerText = isQRMode 
+                ? `📷 Pay ₹${amountNum} via UPI QR Code`
+                : `⚡ Pay ₹${amountNum} via ${selectedApp}`;
               statusText.innerText = "Ready for instant access";
             }
           }
@@ -645,7 +800,9 @@
         rzp.on("payment.failed", function (response) {
           displayError("Payment failed: " + (response.error.description || "Please try again."));
           payBtn.disabled = false;
-          btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
+          btnText.innerText = isQRMode 
+            ? `📷 Pay ₹${amountNum} via UPI QR Code`
+            : `⚡ Pay ₹${amountNum} via ${selectedApp}`;
           statusText.innerText = "Payment cancelled or failed";
         });
 
@@ -655,7 +812,9 @@
         console.error("Checkout initiation error:", err);
         displayError(err.message || "Could not open checkout. Please check your connection.");
         payBtn.disabled = false;
-        btnText.innerText = `Pay ₹${amountNum} & Watch Now`;
+        btnText.innerText = isQRMode 
+          ? `📷 Pay ₹${amountNum} via UPI QR Code`
+          : `⚡ Pay ₹${amountNum} via ${selectedApp}`;
         statusText.innerText = "Ready for instant access";
       }
     }
