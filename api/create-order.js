@@ -35,8 +35,10 @@ export default async function handler(req, res) {
     const authHeader = "Basic " + Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const movieTitle = (title || "Cinemenia Premier Access").substring(0, 30);
 
-    // Create Official Razorpay Order for In-Page Modal
-    const orderResponse = await fetch("https://api.razorpay.com/v1/orders", {
+    // Create Official Razorpay UPI Payment Link (triggers UPI Intent directly on mobile without checkout modal)
+    const callbackUrl = req.body.callback_url || `https://${req.headers.host || "cinemenia.vercel.app"}/`;
+
+    const linkResponse = await fetch("https://api.razorpay.com/v1/payment_links", {
       method: "POST",
       headers: {
         "Authorization": authHeader,
@@ -45,7 +47,20 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         amount: amountInPaise,
         currency: "INR",
-        receipt: `rcpt_${Date.now()}`,
+        description: movieTitle,
+        upi_link: true,
+        reference_id: `rcpt_${Date.now()}`,
+        callback_url: callbackUrl,
+        callback_method: "get",
+        customer: {
+          name: "Cinemenia Viewer",
+          email: "viewer@cinemenia.com",
+          contact: "+919999999999"
+        },
+        notify: {
+          sms: false,
+          email: false
+        },
         notes: {
           title: movieTitle,
           list: (list || "").substring(0, 30)
@@ -53,18 +68,19 @@ export default async function handler(req, res) {
       })
     });
 
-    const orderData = await orderResponse.json();
+    const linkData = await linkResponse.json();
 
-    if (!orderResponse.ok) {
-      const errorMsg = orderData.error ? orderData.error.description : "Failed to initialize payment gateway.";
-      return res.status(orderResponse.status).json({ error: errorMsg });
+    if (!linkResponse.ok) {
+      const errorMsg = linkData.error ? linkData.error.description : "Failed to initialize payment link.";
+      console.error("Payment link error:", linkData);
+      return res.status(linkResponse.status).json({ error: errorMsg });
     }
 
     return res.status(200).json({
-      order_id: orderData.id,
-      amount: orderData.amount,
-      currency: orderData.currency,
-      key_id: keyId
+      payment_url: linkData.short_url,
+      id: linkData.id,
+      amount: linkData.amount,
+      currency: linkData.currency
     });
 
   } catch (err) {

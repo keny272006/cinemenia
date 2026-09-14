@@ -485,9 +485,78 @@
       box.style.display = "block";
     }
 
+    // Auto-unlock if user is returning from successful Razorpay payment
+    const paymentId = urlParams.get("razorpay_payment_id");
+    const statusParam = urlParams.get("status") || urlParams.get("razorpay_payment_link_status");
+    const isPaid = paymentId || statusParam === "paid";
+
+    function unlockAccessUI() {
+      const priceBox = document.querySelector(".price-ticket");
+      if (priceBox) priceBox.style.display = "none";
+      const microPerks = document.querySelector(".micro-perks");
+      if (microPerks) microPerks.style.display = "none";
+
+      const movieHeading = document.getElementById("movieHeading");
+      if (movieHeading) {
+        movieHeading.innerHTML = `🎉 Access <span class="movie-highlight">Unlocked!</span>`;
+      }
+      const movieDesc = document.querySelector(".movie-desc");
+      if (movieDesc) {
+        movieDesc.innerHTML = `Payment confirmed. Tap the red button below to start watching on your <b>YouTube App</b>.`;
+      }
+
+      const badge = document.getElementById("statusBadge");
+      if (badge) {
+        badge.style.background = "rgba(16, 185, 129, 0.15)";
+        badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
+      }
+      const statusText = document.getElementById("statusText");
+      if (statusText) {
+        statusText.style.color = "#10b981";
+        statusText.innerText = `✅ Payment Verified • Instant Access Granted`;
+      }
+
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      let appUrl = safeRedirectUrl;
+      if (isAndroid) {
+        appUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(safeRedirectUrl)};end`;
+      } else if (isIOS) {
+        appUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
+      }
+
+      const payBtn = document.getElementById("payButton");
+      if (payBtn) {
+        payBtn.outerHTML = `
+          <a id="watchBtn" class="cta-button yt-btn" href="${appUrl}">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>▶️ Watch in YouTube App</span>
+          </a>
+          <div style="font-size: 11px; color: #94a3b8; margin-top: 12px; font-weight: 600;">
+            ⚡ 1-Tap instant launch into your official YouTube app
+          </div>
+        `;
+      }
+    }
+
+    if (isPaid) {
+      unlockAccessUI();
+    }
+
     // Background Order Pre-generation (eliminates click latency)
     let preloadedOrderData = null;
     let preloadPromise = null;
+
+    function buildCallbackUrl() {
+      const base = window.location.origin + window.location.pathname;
+      let cb = `${base}?status=paid&list=${playlistId}`;
+      if (rawTitle) cb += `&title=${encodeURIComponent(rawTitle)}`;
+      if (rawSi) cb += `&si=${encodeURIComponent(rawSi)}`;
+      if (rawPrice) cb += `&price=${amountNum}`;
+      return cb;
+    }
 
     async function fetchOrder() {
       try {
@@ -497,7 +566,8 @@
           body: JSON.stringify({
             amount: amountNum,
             title: rawTitle || "Cinemenia Access",
-            list: playlistId
+            list: playlistId,
+            callback_url: buildCallbackUrl()
           })
         });
         if (res.ok) {
@@ -510,8 +580,8 @@
       return null;
     }
 
-    // Start pre-generating order silently in background on page load
-    if (rawListId) {
+    // Start pre-generating payment link silently in background on page load
+    if (rawListId && !isPaid) {
       preloadPromise = fetchOrder();
     }
 
@@ -523,143 +593,41 @@
       alertBox.style.display = "none";
 
       payBtn.disabled = true;
+      btnText.innerText = "Connecting to UPI...";
+      statusText.innerText = "Launching PhonePe / UPI app...";
 
       try {
-        // Step 1: Use preloaded order (Instant 0ms) or await active request
+        // Step 1: Use preloaded payment link (Instant 0ms) or await active request
         let orderData = preloadedOrderData;
         if (!orderData && preloadPromise) {
-          btnText.innerText = "Connecting...";
           orderData = await preloadPromise;
         }
 
         // Fallback: If not ready yet, fetch now
-        if (!orderData || !orderData.order_id) {
-          btnText.innerText = "Connecting...";
-          statusText.innerText = "Opening secure checkout...";
+        if (!orderData || !orderData.payment_url) {
           const res = await fetch("/api/create-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               amount: amountNum,
               title: rawTitle || "Cinemenia Access",
-              list: playlistId
+              list: playlistId,
+              callback_url: buildCallbackUrl()
             })
           });
           orderData = await res.json();
         }
 
-        if (!orderData || !orderData.order_id) {
-          throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment. Please retry.");
+        if (!orderData || !orderData.payment_url) {
+          throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment link. Please retry.");
         }
 
-        // Step 2: Open Razorpay tailored directly for instant UPI Intent
-        const options = {
-          key: orderData.key_id || RAZORPAY_KEY_ID,
-          amount: orderData.amount,
-          currency: orderData.currency || "INR",
-          name: "Cinemenia",
-          description: rawTitle ? decodeURIComponent(rawTitle) : "Premier Movie Access",
-          order_id: orderData.order_id,
-          prefill: {
-            contact: "9999999999",
-            email: "access@cinemenia.com"
-          },
-          config: {
-            display: {
-              blocks: {
-                upi: {
-                  name: `Pay ₹${amountNum} via UPI`,
-                  instruments: [
-                    {
-                      method: "upi",
-                      flows: ["intent", "qr"],
-                      apps: ["phonepe", "google_pay", "paytm", "bhim"]
-                    }
-                  ]
-                }
-              },
-              sequence: ["block.upi"],
-              preferences: {
-                show_default_blocks: false
-              }
-            }
-          },
-          handler: function (response) {
-            // Determine deep link URL for YouTube app
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-            let appUrl = safeRedirectUrl;
-            if (isAndroid) {
-              // Direct Android Intent: this specifically breaks out of Instagram / Telegram in-app browser!
-              appUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;S.browser_fallback_url=${encodeURIComponent(safeRedirectUrl)};end`;
-            } else if (isIOS) {
-              appUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
-            }
-
-            // 1. Hide price box and perks
-            const priceBox = document.querySelector(".price-ticket");
-            if (priceBox) priceBox.style.display = "none";
-            const microPerks = document.querySelector(".micro-perks");
-            if (microPerks) microPerks.style.display = "none";
-
-            // 2. Update headline and description to celebrate unlocked access
-            const movieHeading = document.getElementById("movieHeading");
-            if (movieHeading) {
-              movieHeading.innerHTML = `🎉 Access <span class="movie-highlight">Unlocked!</span>`;
-            }
-            const movieDesc = document.querySelector(".movie-desc");
-            if (movieDesc) {
-              movieDesc.innerHTML = `Payment confirmed. Tap the red button below to start watching on your <b>YouTube App</b>.`;
-            }
-
-            // 3. Update status badge
-            const badge = document.getElementById("statusBadge");
-            badge.style.background = "rgba(16, 185, 129, 0.15)";
-            badge.style.borderColor = "rgba(16, 185, 129, 0.4)";
-            statusText.style.color = "#10b981";
-            statusText.innerText = `✅ Payment Verified • ₹${amountNum} Received`;
-
-            // 4. Transform button into prominent YouTube App Direct Anchor
-            payBtn.outerHTML = `
-              <a id="watchBtn" class="cta-button yt-btn" href="${appUrl}">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-                <span>▶️ Watch in YouTube App</span>
-              </a>
-              <div style="font-size: 11px; color: #94a3b8; margin-top: 12px; font-weight: 600;">
-                ⚡ 1-Tap instant launch into your official YouTube app
-              </div>
-            `;
-          },
-          theme: {
-            color: "#10b981"
-          },
-          modal: {
-            animation: false,
-            backdropclose: true,
-            ondismiss: function () {
-              payBtn.disabled = false;
-              btnText.innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
-              statusText.innerText = "Ready for instant access";
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.on("payment.failed", function (response) {
-          displayError("Payment failed: " + (response.error.description || "Please try again."));
-          payBtn.disabled = false;
-          btnText.innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
-          statusText.innerText = "Payment cancelled or failed";
-        });
-
-        rzp.open();
+        // DIRECT REDIRECT: Triggers native UPI apps (PhonePe, GPay) directly on mobile WITHOUT Razorpay checkout modal!
+        window.location.href = orderData.payment_url;
 
       } catch (err) {
         console.error("Checkout initiation error:", err);
-        displayError(err.message || "Could not open checkout. Please check your connection.");
+        displayError(err.message || "Could not open payment. Please check your connection.");
         payBtn.disabled = false;
         btnText.innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
         statusText.innerText = "Ready for instant access";
