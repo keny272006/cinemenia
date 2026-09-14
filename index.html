@@ -293,9 +293,93 @@
       box-shadow: 0 4px 14px var(--success-glow);
     }
     .cta-button:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
+      opacity: 0.85;
+      cursor: wait;
       transform: none;
+    }
+
+    /* Animated Loader Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Copy Link Button */
+    .copy-btn {
+      width: 100%;
+      padding: 13px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--success);
+      color: #10b981;
+    }
+
+    /* Important Save Instruction Card */
+    .save-instruction-card {
+      width: 100%;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      text-align: left;
+      box-sizing: border-box;
+    }
+    .save-instruction-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.3px;
+    }
+    .save-instruction-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    .save-instruction-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .save-instruction-list li b {
+      color: #ffffff;
     }
 
     /* Streamlined Trust Footer */
@@ -523,6 +607,44 @@
       localStorage.setItem("cinemenia_paid_" + rawListId, "true");
     }
 
+    function copyPlaylistLink(url) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(showCopiedFeedback).catch(() => fallbackCopy(url));
+      } else {
+        fallbackCopy(url);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand("copy");
+        showCopiedFeedback();
+      } catch (err) {
+        alert("Copy failed. Please manually copy: " + text);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function showCopiedFeedback() {
+      const btn = document.getElementById("copyLinkBtn");
+      const txt = document.getElementById("copyBtnText");
+      if (btn && txt) {
+        btn.classList.add("copied");
+        txt.innerText = "✅ Link Copied to Clipboard!";
+        setTimeout(() => {
+          btn.classList.remove("copied");
+          txt.innerText = "📋 Copy Playlist Link";
+        }, 3000);
+      }
+    }
+
     function unlockAccessUI() {
       const priceBox = document.querySelector(".price-ticket");
       if (priceBox) priceBox.style.display = "none";
@@ -571,8 +693,39 @@
             </svg>
             <span>▶️ Watch in YouTube App</span>
           </a>
-          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <span style="font-size: 11px; color: #94a3b8; font-weight: 600;">⚡ 1-Tap instant launch into your official YouTube app</span>
+
+          <button type="button" id="copyLinkBtn" class="copy-btn" onclick="copyPlaylistLink('${safeRedirectUrl}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnText">📋 Copy Playlist Link</span>
+          </button>
+
+          <div class="save-instruction-card">
+            <div class="save-instruction-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>IMPORTANT: SAVE YOUR ACCESS</span>
+            </div>
+            <ul class="save-instruction-list">
+              <li>
+                <span>📌</span>
+                <span><b>Shown only once:</b> Copy the link above and store it safely in your notes or WhatsApp chat.</span>
+              </li>
+              <li>
+                <span>🔖</span>
+                <span><b>Save Playlist:</b> Open in YouTube and tap <b>"Save" (Bookmark icon)</b> to add it to your Library.</span>
+              </li>
+              <li>
+                <span>🕒</span>
+                <span><b>Keep in History:</b> Start playing any video so it automatically stays in your <b>YouTube Watch History</b> forever.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 14px; text-align: center;">
             <a href="${safeRedirectUrl}" target="_blank" rel="noopener" style="font-size: 12px; color: #fbbf24; text-decoration: underline; font-weight: 600;">Or Open Directly in Web Browser →</a>
           </div>
         `;
@@ -678,8 +831,8 @@
       if (alertBox) alertBox.style.display = "none";
 
       payBtn.disabled = true;
-      btnText.innerText = "Launching PhonePe...";
-      statusText.innerText = "Opening UPI app...";
+      btnText.innerHTML = `<span class="spinner"></span> <span>Launching PhonePe / UPI...</span>`;
+      statusText.innerText = "Please wait, connecting securely...";
 
       try {
         // Step 1: Use preloaded payment link (Instant 0ms) or await active request
