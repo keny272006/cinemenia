@@ -89,7 +89,7 @@
       -webkit-backdrop-filter: blur(28px);
       border: 1px solid var(--surface-border);
       border-radius: 24px;
-      padding: 36px 28px 28px;
+      padding: 30px 24px 22px;
       box-shadow: 
         0 0 0 1px rgba(255, 255, 255, 0.03),
         0 24px 60px -12px rgba(0, 0, 0, 0.75),
@@ -109,7 +109,7 @@
       border: 1px solid rgba(245, 158, 11, 0.22);
       border-radius: 999px;
       padding: 6px 14px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .brand-icon {
       width: 14px;
@@ -142,8 +142,8 @@
     .movie-desc {
       font-size: 13px;
       color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 24px;
+      line-height: 1.45;
+      margin-bottom: 18px;
       max-width: 340px;
     }
 
@@ -153,8 +153,8 @@
       background: linear-gradient(180deg, rgba(14, 20, 32, 0.9) 0%, rgba(10, 14, 24, 0.95) 100%);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 18px;
-      padding: 20px 22px;
-      margin-bottom: 22px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -205,41 +205,25 @@
       font-weight: 500;
     }
 
-    /* Feature Perks */
-    .perks-card {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 16px;
-      padding: 16px 18px;
-      margin-bottom: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .perk-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      color: #cbd5e1;
-      text-align: left;
-    }
-    .perk-icon-wrap {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      background: rgba(16, 185, 129, 0.12);
+    /* Compact Micro Perks */
+    .micro-perks {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-gold-light);
+      margin-bottom: 20px;
+      background: rgba(245, 158, 11, 0.07);
+      border: 1px solid rgba(245, 158, 11, 0.18);
+      border-radius: 12px;
+      padding: 10px 14px;
+      width: 100%;
     }
-    .perk-icon-wrap svg {
-      width: 13px;
-      height: 13px;
-      stroke: var(--success);
-      stroke-width: 2.5;
+    .perk-dot {
+      color: rgba(245, 158, 11, 0.4);
+      font-size: 14px;
     }
 
     /* Primary CTA Button */
@@ -248,7 +232,7 @@
       padding: 16px 20px;
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #ffffff;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 0.2px;
       border: none;
@@ -296,46 +280,33 @@
       transform: none;
     }
 
-    /* Trust & Security Indicators */
+    /* Streamlined Trust Footer */
     .trust-footer {
-      margin-top: 20px;
+      margin-top: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
       width: 100%;
     }
-    .security-badge {
+    .upi-trust-line {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 700;
+      color: #cbd5e1;
       letter-spacing: 0.2px;
     }
-    .security-badge svg {
-      width: 12px;
-      height: 12px;
-      stroke: var(--text-muted);
+    .upi-trust-line svg {
+      stroke: var(--success);
+      width: 14px;
+      height: 14px;
     }
-
-    .payment-chips {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .payment-chip {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 10px;
-      font-weight: 600;
-      color: #94a3b8;
-      letter-spacing: 0.3px;
+    .security-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
     /* Live Status Badge */
@@ -403,7 +374,7 @@
       Unlock <span class="movie-highlight">Daily Movie Explanation</span>
     </h1>
     <p class="movie-desc">
-      Watch the full explanation and breakdown on YouTube immediately after completing your access pass.
+      Instant access to the complete video breakdown on YouTube.
     </p>
 
     <!-- Pricing Ticket Box -->
@@ -418,35 +389,16 @@
       </div>
     </div>
 
-    <!-- Key Perks -->
-    <div class="perks-card">
-      <div class="perk-item">
-        <div class="perk-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <span>Full-length uncensored video breakdown</span>
-      </div>
-      <div class="perk-item">
-        <div class="perk-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <span>Instant automatic redirect to YouTube</span>
-      </div>
-      <div class="perk-item">
-        <div class="perk-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <span>Zero recurring fees • Lifetime playlist link</span>
-      </div>
+    <!-- Compact Perks Line -->
+    <div class="micro-perks">
+      <span>⚡ Instant Unlock</span>
+      <span class="perk-dot">•</span>
+      <span>Full HD Video</span>
+      <span class="perk-dot">•</span>
+      <span>Direct YouTube Link</span>
     </div>
 
-    <!-- Action Button -->
+    <!-- Primary Action Button -->
     <button id="payButton" class="cta-button" type="button" onclick="initiatePayment()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -464,23 +416,15 @@
       <span id="statusText">Ready for instant access</span>
     </div>
 
-    <!-- Trust & Payment Methods -->
+    <!-- Streamlined Trust Footer -->
     <div class="trust-footer">
-      <div class="security-badge">
+      <div class="upi-trust-line">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
-        <span>Secured by Razorpay • 256-bit SSL Encryption</span>
+        <span>Instant UPI • GPay, PhonePe, Paytm & QR</span>
       </div>
-
-      <div class="payment-chips">
-        <span class="payment-chip">PhonePe</span>
-        <span class="payment-chip">Google Pay</span>
-        <span class="payment-chip">Paytm</span>
-        <span class="payment-chip">UPI QR</span>
-        <span class="payment-chip">Cards</span>
-        <span class="payment-chip">NetBanking</span>
-      </div>
+      <div class="security-sub">Secured by Razorpay • 256-Bit Encryption</div>
     </div>
 
   </div>
@@ -608,19 +552,11 @@
                       method: "upi"
                     }
                   ]
-                },
-                other: {
-                  name: "Other Payment Options",
-                  instruments: [
-                    { method: "card" },
-                    { method: "netbanking" },
-                    { method: "wallet" }
-                  ]
                 }
               },
-              sequence: ["block.upi", "block.other"],
+              sequence: ["block.upi"],
               preferences: {
-                show_default_blocks: true
+                show_default_blocks: false
               }
             }
           },
@@ -635,7 +571,7 @@
 
             setTimeout(() => {
               window.location.href = safeRedirectUrl;
-            }, 1000);
+            }, 300);
           },
           prefill: {},
           theme: {
