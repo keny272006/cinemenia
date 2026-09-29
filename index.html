@@ -3,618 +3,829 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VIP Manga Access | Instant Unlock & Read</title>
-  <meta name="description" content="Unlock instant access to VIP Manga & Manhwa chapters with high-quality HD color PDFs and direct Telegram access." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <title>VIP Manga • Premier Access</title>
+  
+  <!-- Preconnect to Razorpay & Google Fonts for instant load -->
+  <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+  <link rel="preconnect" href="https://api.razorpay.com" crossorigin>
+  <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+  <link rel="dns-prefetch" href="https://api.razorpay.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Razorpay Official Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <style>
     :root {
-      --bg: #090a0f;
-      --card-bg: rgba(18, 20, 29, 0.75);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --accent: #8b5cf6;
-      --accent-glow: rgba(139, 92, 246, 0.35);
-      --neon-pink: #ec4899;
-      --neon-cyan: #06b6d4;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-primary: #07090e;
+      --surface: rgba(18, 24, 38, 0.75);
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --surface-hover: rgba(26, 34, 52, 0.85);
+      --accent-gold: #8b5cf6;
+      --accent-gold-light: #c4b5fd;
+      --accent-glow: rgba(139, 92, 246, 0.25);
+      --telegram-blue: #0088cc;
+      --telegram-glow: rgba(0, 136, 204, 0.35);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
       --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.3);
-      --gold: #f59e0b;
+      --success-glow: rgba(16, 185, 129, 0.25);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
-      color: var(--text-main);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px 16px;
+      padding: 24px 16px;
+      position: relative;
       overflow-x: hidden;
     }
 
-    /* Ambient animated mesh line */
-    body::before {
-      content: "";
+    /* Ambient Cinema & Manga Lighting Glows */
+    .ambient-glow-1 {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(#ffffff 1px, transparent 1px);
-      background-size: 32px 32px;
-      opacity: 0.03;
+      top: -15%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 550px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 70%);
+      filter: blur(70px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .ambient-glow-2 {
+      position: fixed;
+      bottom: -10%;
+      right: 10%;
+      width: 400px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+      filter: blur(80px);
       pointer-events: none;
       z-index: 0;
     }
 
-    .container {
-      width: 100%;
-      max-width: 460px;
+    /* Main Card Container */
+    .card {
       position: relative;
       z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      padding: 30px 24px 22px;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 24px 60px -12px rgba(0, 0, 0, 0.75),
+        0 0 45px rgba(139, 92, 246, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
 
-    /* Header & Branding */
-    .brand-badge {
+    /* Top Brand Badge */
+    .brand-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      color: #c4b5fd;
-      padding: 6px 14px;
+      gap: 8px;
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.28);
       border-radius: 999px;
-      font-size: 0.78rem;
+      padding: 6px 14px;
+      margin-bottom: 16px;
+    }
+    .brand-icon {
+      width: 14px;
+      height: 14px;
+      fill: #a855f7;
+    }
+    .brand-text {
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
-      margin-bottom: 14px;
-      box-shadow: 0 0 20px var(--accent-glow);
+      color: #c4b5fd;
     }
 
-    .brand-badge span {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #a855f7;
-      box-shadow: 0 0 10px #a855f7;
-      animation: pulse 1.8s infinite;
+    /* Manga Information Header */
+    .movie-headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
     }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
-    }
-
-    /* Main Card */
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 26px 22px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(139, 92, 246, 0.1);
-      position: relative;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .card::after {
-      content: "";
-      position: absolute;
-      top: -50%; left: -50%;
-      width: 200%; height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .manga-header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .manga-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.65rem;
-      font-weight: 800;
-      line-height: 1.25;
-      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #a855f7 100%);
+    .movie-highlight {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #c084fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
+    }
+    .movie-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      margin-bottom: 18px;
+      max-width: 340px;
     }
 
-    .manga-sub {
-      font-size: 0.86rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .feature-tags {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .ftag {
-      font-size: 0.72rem;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      color: #94a3b8;
-      font-weight: 600;
-    }
-
-    .ftag.gold {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: rgba(245, 158, 11, 0.3);
-      color: #fbbf24;
-    }
-
-    /* Price Box */
-    .price-container {
-      background: linear-gradient(145deg, rgba(30, 34, 48, 0.7), rgba(18, 20, 29, 0.9));
-      border: 1px solid rgba(139, 92, 246, 0.25);
+    /* Price Section */
+    .price-ticket {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(14, 20, 32, 0.9) 0%, rgba(10, 14, 24, 0.95) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 18px;
       padding: 16px 20px;
-      margin-bottom: 22px;
+      margin-bottom: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-    }
-
-    .price-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .price-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      font-weight: 700;
-    }
-
-    .price-amount {
-      font-family: 'Outfit', sans-serif;
-      font-size: 2rem;
-      font-weight: 900;
-      color: #ffffff;
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-    }
-
-    .price-currency {
-      color: #a855f7;
-      font-size: 1.4rem;
-    }
-
-    .price-badge {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #34d399;
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
-    /* QR Area */
-    .qr-card {
-      background: #ffffff;
-      padding: 16px;
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px auto;
-      width: fit-content;
-      box-shadow: 0 0 35px rgba(139, 92, 246, 0.25);
       position: relative;
     }
-
-    .qr-card img {
-      width: 195px;
-      height: 195px;
-      display: block;
-      border-radius: 8px;
+    .price-ticket::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 15%;
+      bottom: 15%;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background: #a855f7;
+      box-shadow: 0 0 10px #a855f7;
     }
-
-    .qr-caption {
-      margin-top: 10px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .price-meta {
+      text-align: left;
     }
-
-    .upi-id-box {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 18px;
-    }
-
-    .upi-id-box code {
-      color: #e2e8f0;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 3px 8px;
-      border-radius: 6px;
+    .price-tag-label {
+      font-size: 11px;
       font-weight: 600;
-      user-select: all;
-      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
     }
-
-    /* One-Click UPI Mobile Buttons */
-    .upi-buttons-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+    .price-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
     }
-
-    .btn-upi {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #f1f5f9;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-size: 0.85rem;
+    .price-value-group {
+      text-align: right;
+    }
+    .price-current {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 34px;
       font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .price-original {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Compact Micro Perks */
+    .micro-perks {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-gold-light);
+      margin-bottom: 20px;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 12px;
+      padding: 10px 14px;
+      width: 100%;
     }
-
-    .btn-upi:hover, .btn-upi:active {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.5);
-      transform: translateY(-2px);
+    .perk-dot {
+      color: rgba(139, 92, 246, 0.4);
+      font-size: 14px;
     }
 
     /* Primary CTA Button */
-    .btn-primary {
+    .cta-button {
       width: 100%;
+      padding: 16px 20px;
       background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
       color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
       border: none;
-      padding: 16px 20px;
-      border-radius: 16px;
-      font-size: 1rem;
-      font-weight: 800;
-      font-family: 'Outfit', sans-serif;
+      border-radius: 14px;
       cursor: pointer;
-      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-      box-shadow: 0 12px 35px rgba(236, 72, 153, 0.5);
-      transform: translateY(-2px);
-    }
-
-    /* Success / Unlock Screen */
-    .success-container {
-      display: none;
-      text-align: center;
-      animation: fadeIn 0.4s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .success-icon {
-      width: 70px;
-      height: 70px;
-      background: rgba(16, 185, 129, 0.18);
-      border: 2px solid var(--success);
-      color: var(--success);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      margin: 0 auto 16px auto;
-      box-shadow: 0 0 30px var(--success-glow);
-    }
-
-    .success-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-
-    .success-desc {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-      line-height: 1.5;
-    }
-
-    .btn-unlock-telegram {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      width: 100%;
-      background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
-      color: #ffffff;
-      padding: 18px 24px;
-      border-radius: 18px;
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 800;
       text-decoration: none;
-      box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
-      margin-bottom: 22px;
-      transition: all 0.3s ease;
-      animation: glowTelegram 2s infinite alternate;
+      box-sizing: border-box;
+      box-shadow: 
+        0 4px 20px var(--accent-glow),
+        0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
     }
 
-    @keyframes glowTelegram {
-      from { box-shadow: 0 8px 25px rgba(6, 182, 212, 0.35); }
-      to { box-shadow: 0 12px 40px rgba(6, 182, 212, 0.65); transform: translateY(-2px); }
+    /* Vibrant Telegram App Button */
+    .tg-btn {
+      background: linear-gradient(135deg, #0284c7 0%, #0088cc 100%) !important;
+      box-shadow: 0 4px 25px rgba(0, 136, 204, 0.45) !important;
+      font-size: 17px !important;
+      animation: pulse-tg 2s infinite;
+    }
+    .tg-btn:hover {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+      box-shadow: 0 8px 30px rgba(0, 136, 204, 0.6) !important;
+    }
+    @keyframes pulse-tg {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 25px rgba(0, 136, 204, 0.45); }
+      50% { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0, 136, 204, 0.65); }
+    }
+    .cta-button::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.75s ease;
+    }
+    .cta-button:hover {
+      background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(139, 92, 246, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .cta-button:hover::after {
+      left: 150%;
+    }
+    .cta-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .cta-button:disabled {
+      opacity: 0.85;
+      cursor: wait;
+      transform: none;
     }
 
-    /* Tips Box */
-    .tips-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 16px;
-      padding: 16px;
-      text-align: left;
-    }
-
-    .tips-title {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #fbbf24;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .tips-list {
-      font-size: 0.78rem;
-      color: #cbd5e1;
-      line-height: 1.6;
-      list-style: none;
-    }
-
-    .tips-list li {
-      margin-bottom: 6px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    /* Loading / Checking Modal */
-    .verifying-box {
-      display: none;
-      text-align: center;
-      padding: 30px 10px;
-    }
-
+    /* Animated Loader Spinner */
     .spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid rgba(139, 92, 246, 0.2);
-      border-top-color: #8b5cf6;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
       border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      margin: 0 auto 16px auto;
+      animation: spin 0.75s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Footer */
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.75rem;
-      color: #64748b;
+    /* Copy Link Button */
+    .copy-btn {
+      width: 100%;
+      padding: 13px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+    .copy-btn.copied {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--success);
+      color: #10b981;
+    }
+
+    /* Important Save Instruction Card */
+    .save-instruction-card {
+      width: 100%;
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      text-align: left;
+      box-sizing: border-box;
+    }
+    .save-instruction-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.3px;
+    }
+    .save-instruction-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    .save-instruction-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .save-instruction-list li b {
+      color: #ffffff;
+    }
+
+    /* Streamlined Trust Footer */
+    .trust-footer {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .upi-trust-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      letter-spacing: 0.2px;
+    }
+    .upi-trust-line svg {
+      stroke: var(--success);
+      width: 14px;
+      height: 14px;
+    }
+    .security-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Live Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 16px;
+      font-weight: 500;
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.85); }
+    }
+
+    /* Error Message Box */
+    .alert-box {
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      color: #fca5a5;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 14px;
+      display: none;
+      width: 100%;
+      text-align: left;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div style="text-align: center;">
-      <div class="brand-badge">
-        <span></span> VIP MANGA VAULT
+  <!-- Ambient Cinematic Gradients -->
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Main Card -->
+  <div class="card">
+    
+    <!-- Brand Pill -->
+    <div class="brand-pill">
+      <svg class="brand-icon" viewBox="0 0 24 24">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      <span class="brand-text">VIP MANGA VAULT</span>
+    </div>
+
+    <!-- Manga Title -->
+    <h1 id="movieHeading" class="movie-headline">
+      Unlock <span class="movie-highlight">VIP Manga Series</span>
+    </h1>
+    <p class="movie-desc">
+      Instant access to all chapters and high-quality color PDF bundle.
+    </p>
+
+    <!-- Pricing Ticket Box -->
+    <div class="price-ticket">
+      <div class="price-meta">
+        <div class="price-tag-label">VIP Access Pass</div>
+        <div class="price-sub">One-time payment • Instant unlock</div>
+      </div>
+      <div class="price-value-group">
+        <div id="priceDisplay" class="price-current">₹29</div>
+        <div id="originalPrice" class="price-original">₹149</div>
       </div>
     </div>
 
-    <!-- Main Payment Card -->
-    <div class="card" id="paymentCard">
-      <div class="manga-header">
-        <h1 class="manga-title" id="mangaTitle">Jeonjikjijon</h1>
-        <div class="manga-sub">
-          <span>📖 High Quality Color PDF</span>
-          <span>•</span>
-          <span>⚡ Instant Access</span>
-        </div>
-        <div class="feature-tags">
-          <span class="ftag gold">⭐ All Chapters</span>
-          <span class="ftag">📱 Mobile & PC</span>
-          <span class="ftag">🔒 Private Channel</span>
-        </div>
-      </div>
+    <!-- Compact Perks Line -->
+    <div class="micro-perks">
+      <span>⚡ Instant Unlock</span>
+      <span class="perk-dot">•</span>
+      <span>📖 Color PDF Bundle</span>
+      <span class="perk-dot">•</span>
+      <span>🔒 VIP Telegram</span>
+    </div>
 
-      <div class="price-container">
-        <div class="price-info">
-          <span class="price-label">Lifetime Access</span>
-          <div class="price-amount">
-            <span class="price-currency">₹</span>
-            <span id="priceAmount">29</span>
-          </div>
-        </div>
-        <div class="price-badge">100% Verified</div>
-      </div>
+    <!-- Error/Notice Alert Box -->
+    <div id="alertBox" class="alert-box"></div>
 
-      <!-- UPI QR Code -->
-      <div class="qr-card">
-        <img id="qrImage" src="" alt="Scan UPI QR Code to Pay" />
-        <div class="qr-caption">
-          <span>📷</span> Scan with Any UPI App
-        </div>
-      </div>
-
-      <div class="upi-id-box">
-        UPI ID: <code id="upiText" onclick="copyUpi()">vipmanga@upi</code>
-      </div>
-
-      <!-- Quick One-Click UPI Apps on Mobile -->
-      <div class="upi-buttons-grid" id="upiAppButtons">
-        <a id="btnGpay" class="btn-upi" href="#">
-          <span>🟢</span> Google Pay
-        </a>
-        <a id="btnPhonePe" class="btn-upi" href="#">
-          <span>🟣</span> PhonePe
-        </a>
-        <a id="btnPaytm" class="btn-upi" href="#">
-          <span>🔵</span> Paytm
-        </a>
-        <a id="btnUniversal" class="btn-upi" href="#">
-          <span>⚡</span> Other UPI
-        </a>
-      </div>
-
-      <!-- Action Button -->
-      <button class="btn-primary" id="btnConfirmPay" onclick="handlePaymentConfirm()">
-        <span>✓</span> I Have Paid — Unlock Manga
+    <!-- Dynamic Action Button Area -->
+    <div id="actionContainer" style="width: 100%;">
+      <button id="payButton" class="cta-button" onclick="initiatePayment()">
+        <span id="btnText">⚡ Pay ₹29 & Unlock Instantly</span>
       </button>
     </div>
 
-    <!-- Verification Loading State -->
-    <div class="card verifying-box" id="verifyingBox">
-      <div class="spinner"></div>
-      <h3 style="font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 6px;">Verifying Payment...</h3>
-      <p style="font-size: 0.84rem; color: var(--text-muted);">Confirming transaction with payment gateway. Unlocking your Telegram access...</p>
-    </div>
-
-    <!-- Success Screen (Unlocked Telegram Link) -->
-    <div class="card success-container" id="successCard">
-      <div class="success-icon">✓</div>
-      <h2 class="success-title">Payment Confirmed!</h2>
-      <p class="success-desc">
-        Your VIP access to <strong id="successMangaTitle" style="color:#ffffff;">Jeonjikjijon</strong> is now active. Tap below to enter the private channel.
-      </p>
-
-      <a id="telegramJoinBtn" class="btn-unlock-telegram" href="#" target="_blank">
-        <span>🚀</span> Join Telegram VIP Channel
-      </a>
-
-      <!-- 3-Step Permanent Access Tips -->
-      <div class="tips-box">
-        <div class="tips-title">
-          <span>💡</span> Keep Access Forever (Never Lose This Channel):
-        </div>
-        <ul class="tips-list">
-          <li>📌 <strong>1. Pin to Top:</strong> Long press the channel in Telegram and tap <em>Pin</em>.</li>
-          <li>💾 <strong>2. Save Link:</strong> Forward this channel link to your Telegram <em>Saved Messages</em>.</li>
-          <li>🔍 <strong>3. Search Anytime:</strong> Type the manga name in the Telegram search bar to open it anytime.</li>
-        </ul>
+    <!-- Streamlined Trust Footer -->
+    <div class="trust-footer">
+      <div class="upi-trust-line">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <span>PhonePe • GPay • Paytm • UPI Supported</span>
       </div>
+      <span class="security-sub">Secured with 256-bit encryption • Instant Delivery</span>
     </div>
 
-    <div class="footer">
-      🔒 256-Bit Encrypted Secure UPI Gateway • 24/7 Instant Delivery
+    <!-- Live Status Pill -->
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span id="statusText">Ready for instant access</span>
     </div>
+
   </div>
 
   <script>
     // -------------------------------------------------------------
-    // Parse Query Parameters from URL
-    // e.g. ?title=Jeonjikjijon&price=29&tg=https://t.me/+AbCdEf&upi=vipmanga@upi
+    // URL Parameter Parsing & Content Population
     // -------------------------------------------------------------
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Support both ?tg=, ?list=, and ?link=
+    const rawListId = urlParams.get("tg") || urlParams.get("list") || urlParams.get("link");
+    const rawTitle = urlParams.get("title");
+    const rawSi = urlParams.get("si");
+    const rawPrice = urlParams.get("price");
+    const paymentId = urlParams.get("payment_id") || urlParams.get("razorpay_payment_id");
+    const statusParam = urlParams.get("status") || urlParams.get("razorpay_payment_link_status");
 
-    const mangaTitle = urlParams.get('title') || 'VIP Manga Series';
-    const mangaPrice = urlParams.get('price') || '29';
-    const telegramLink = urlParams.get('tg') || 'https://t.me/';
-    const upiId = urlParams.get('upi') || '38544845@upi'; // Replace with your default UPI ID if not passed
-
-    // Populate DOM Elements
-    document.getElementById('mangaTitle').textContent = mangaTitle;
-    document.getElementById('successMangaTitle').textContent = mangaTitle;
-    document.getElementById('priceAmount').textContent = mangaPrice;
-    document.getElementById('upiText').textContent = upiId;
-    document.getElementById('telegramJoinBtn').href = telegramLink;
-
-    // Generate Standard UPI Intent String
-    // Format: upi://pay?pa=<UPI_ID>&pn=<NAME>&am=<AMOUNT>&cu=INR&tn=<NOTE>
-    const note = encodeURIComponent(`VIP Manga - ${mangaTitle}`);
-    const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("Manga VIP")}&am=${encodeURIComponent(mangaPrice)}&cu=INR&tn=${note}`;
-
-    // Specific Mobile UPI URLs
-    document.getElementById('btnUniversal').href = upiDeepLink;
-    document.getElementById('btnGpay').href = upiDeepLink;
-    document.getElementById('btnPhonePe').href = upiDeepLink;
-    document.getElementById('btnPaytm').href = upiDeepLink;
-
-    // Generate Dynamic QR Code Image
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=4&data=${encodeURIComponent(upiDeepLink)}`;
-    document.getElementById('qrImage').src = qrApiUrl;
-
-    // Copy UPI ID function
-    function copyUpi() {
-      navigator.clipboard.writeText(upiId).then(() => {
-        alert("UPI ID copied: " + upiId);
-      }).catch(() => {});
+    // Dynamic Title & Heading Update
+    if (rawTitle) {
+      const cleanTitle = decodeURIComponent(rawTitle);
+      document.title = `${cleanTitle} • VIP Manga`;
+      document.getElementById("movieHeading").innerHTML = `Unlock <span class="movie-highlight">${cleanTitle}</span>`;
     }
 
-    // Payment Confirmation Simulation & Unlock
-    function handlePaymentConfirm() {
-      document.getElementById('paymentCard').style.display = 'none';
-      document.getElementById('verifyingBox').style.display = 'block';
+    // Dynamic Price Calculation
+    let amountNum = 29;
+    if (rawPrice) {
+      const parsedPrice = parseInt(rawPrice, 10);
+      if (!isNaN(parsedPrice) && parsedPrice > 0) {
+        amountNum = parsedPrice;
+      }
+    }
+    document.getElementById("priceDisplay").innerText = `₹${amountNum}`;
+    document.getElementById("originalPrice").innerText = `₹${Math.max(amountNum * 3, 99)}`;
+    document.getElementById("btnText").innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
 
-      // 3.5s smooth transition simulation
-      setTimeout(() => {
-        document.getElementById('verifyingBox').style.display = 'none';
-        document.getElementById('successCard').style.display = 'block';
-      }, 3500);
+    const playlistId = rawListId ? encodeURIComponent(rawListId) : "";
+
+    // Payment state validation
+    const isPaid = (statusParam && (statusParam.toLowerCase() === "paid" || statusParam.toLowerCase() === "captured")) || Boolean(paymentId);
+    const isFailedOrCancelled = statusParam && (statusParam.toLowerCase() === "failed" || statusParam.toLowerCase() === "cancelled" || statusParam.toLowerCase() === "expired");
+
+    function displayError(msg) {
+      const alertBox = document.getElementById("alertBox");
+      if (alertBox) {
+        alertBox.innerText = msg;
+        alertBox.style.display = "block";
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const copyText = document.getElementById("copyBtnText");
+        if (copyText) {
+          copyText.innerText = "✓ Channel Link Copied!";
+          const btn = document.getElementById("copyBtn");
+          if (btn) btn.classList.add("copied");
+          setTimeout(() => {
+            copyText.innerText = "📋 Copy Channel Link";
+            if (btn) btn.classList.remove("copied");
+          }, 3000);
+        }
+      }).catch(() => {
+        alert("Link: " + text);
+      });
+    }
+
+    // Unlock Access UI
+    function unlockAccessUI() {
+      const targetLink = decodeURIComponent(playlistId || "https://t.me/");
+      const safeRedirectUrl = targetLink.startsWith("http") ? targetLink : `https://t.me/${targetLink}`;
+      
+      const statusText = document.getElementById("statusText");
+      if (statusText) {
+        statusText.innerText = "Access Unlocked • Ready to Read";
+        statusText.style.color = "#34d399";
+      }
+      
+      const actionContainer = document.getElementById("actionContainer");
+      if (actionContainer) {
+        actionContainer.innerHTML = `
+          <a id="watchBtn" href="${safeRedirectUrl}" class="cta-button tg-btn" target="_blank" rel="noopener">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.99 1.27-5.61 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.38-.49 1.03-.75 4.04-1.76 6.74-2.92 8.09-3.48 3.85-1.6 4.65-1.88 5.17-1.89.11 0 .37.03.54.17.14.12.18.28.2.45-.02.07-.02.21-.04.35z"/>
+            </svg>
+            <span>🚀 Join Telegram VIP Channel</span>
+          </a>
+
+          <button id="copyBtn" class="copy-btn" onclick="copyToClipboard('${safeRedirectUrl}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnText">📋 Copy Channel Link</span>
+          </button>
+
+          <div class="save-instruction-card">
+            <div class="save-instruction-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span>IMPORTANT: SAVE YOUR ACCESS</span>
+            </div>
+            <ul class="save-instruction-list">
+              <li>
+                <span>📌</span>
+                <span><b>Pin Channel:</b> In Telegram, long press the VIP channel and tap <b>"Pin to top"</b>.</span>
+              </li>
+              <li>
+                <span>🔖</span>
+                <span><b>Save Link:</b> Forward the invite link above to your <b>Telegram Saved Messages</b>.</span>
+              </li>
+              <li>
+                <span>🔍</span>
+                <span><b>Search Anytime:</b> Search <b>"${decodeURIComponent(rawTitle || 'Manga')}"</b> in your Telegram search bar anytime.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 14px; text-align: center;">
+            <a href="${safeRedirectUrl}" target="_blank" rel="noopener" style="font-size: 12px; color: #c4b5fd; text-decoration: underline; font-weight: 600;">Or Open Directly in Web Browser →</a>
+          </div>
+        `;
+      }
+    }
+
+    // Automatic real-time status checker for pending payments in this active session
+    let activePollInterval = null;
+
+    async function verifyStatusWithServer(transactionId) {
+      if (!transactionId) return false;
+      try {
+        const res = await fetch(`/api/check-status?id=${encodeURIComponent(transactionId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.paid) {
+            sessionStorage.removeItem("cinemenia_active_tx_id");
+            unlockAccessUI();
+            if (activePollInterval) clearInterval(activePollInterval);
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn("Status check failed:", err);
+      }
+      return false;
+    }
+
+    function checkActivePayment() {
+      const pendingId = sessionStorage.getItem("cinemenia_active_tx_id");
+      if (pendingId) {
+        verifyStatusWithServer(pendingId);
+      }
+    }
+
+    // Check automatically when user switches back from PhonePe to browser tab
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        checkActivePayment();
+      }
+    });
+    window.addEventListener("focus", checkActivePayment);
+
+    // On fresh visits (no payment callback params), clear any leftover session transactions
+    if (!paymentId && !statusParam) {
+      sessionStorage.removeItem("cinemenia_active_tx_id");
+    } else {
+      const currentSessionTx = sessionStorage.getItem("cinemenia_active_tx_id");
+      if (!isPaid && currentSessionTx) {
+        verifyStatusWithServer(currentSessionTx);
+      }
+    }
+
+    if (isPaid) {
+      unlockAccessUI();
+    } else if (isFailedOrCancelled) {
+      displayError("⚠️ Payment was cancelled or not completed. Please try again to unlock your manga.");
+    } else if (!rawListId) {
+      displayError("Notice: Missing access link parameter (?tg= or ?list=). Please verify the link sent to you.");
+    }
+
+    // Background Order Pre-generation (eliminates click latency)
+    let preloadedOrderData = null;
+    let preloadPromise = null;
+
+    function buildCallbackUrl() {
+      const base = window.location.origin + window.location.pathname;
+      let cb = `${base}?tg=${playlistId}`;
+      if (rawTitle) cb += `&title=${encodeURIComponent(rawTitle)}`;
+      if (rawSi) cb += `&si=${encodeURIComponent(rawSi)}`;
+      if (rawPrice) cb += `&price=${amountNum}`;
+      return cb;
+    }
+
+    async function fetchOrder() {
+      try {
+        const res = await fetch("/api/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountNum,
+            title: rawTitle || "VIP Manga Access",
+            list: playlistId,
+            callback_url: buildCallbackUrl()
+          })
+        });
+        if (res.ok) {
+          preloadedOrderData = await res.json();
+          return preloadedOrderData;
+        }
+      } catch (err) {
+        console.warn("Preload error:", err);
+      }
+      return null;
+    }
+
+    // Start pre-generating payment link silently in background on page load
+    if (rawListId && !isPaid) {
+      preloadPromise = fetchOrder();
+    }
+
+    async function initiatePayment() {
+      const payBtn = document.getElementById("payButton");
+      const btnText = document.getElementById("btnText");
+      const statusText = document.getElementById("statusText");
+      const alertBox = document.getElementById("alertBox");
+      if (alertBox) alertBox.style.display = "none";
+
+      payBtn.disabled = true;
+      btnText.innerHTML = `<span class="spinner"></span> <span>Launching PhonePe / UPI...</span>`;
+      statusText.innerText = "Please wait, connecting securely...";
+
+      try {
+        // Step 1: Use preloaded payment link (Instant 0ms) or await active request
+        let orderData = preloadedOrderData;
+        if (!orderData && preloadPromise) {
+          orderData = await preloadPromise;
+        }
+
+        // Fallback: If not ready yet, fetch now
+        if (!orderData || !orderData.payment_url) {
+          const res = await fetch("/api/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: amountNum,
+              title: rawTitle || "VIP Manga Access",
+              list: playlistId,
+              callback_url: buildCallbackUrl()
+            })
+          });
+          orderData = await res.json();
+        }
+
+        if (!orderData || !orderData.payment_url) {
+          throw new Error(orderData && orderData.error ? orderData.error : "Failed to initialize payment link. Please retry.");
+        }
+
+        // Save transaction ID in session for background verification
+        if (orderData.id) {
+          sessionStorage.setItem("cinemenia_active_tx_id", orderData.id);
+        }
+
+        // Start polling server in background every 2 seconds
+        if (activePollInterval) clearInterval(activePollInterval);
+        activePollInterval = setInterval(() => {
+          verifyStatusWithServer(orderData.id);
+        }, 2000);
+
+        // Update button to allow user to re-check or retry if needed
+        setTimeout(() => {
+          if (payBtn && !document.getElementById("watchBtn")) {
+            payBtn.disabled = false;
+            btnText.innerText = "🔄 I Have Paid (Check Status)";
+            statusText.innerText = "Waiting for PhonePe confirmation...";
+            payBtn.onclick = () => {
+              btnText.innerText = "Checking...";
+              verifyStatusWithServer(orderData.id).then(paid => {
+                if (!paid) {
+                  btnText.innerText = "🔄 I Have Paid (Check Status)";
+                  displayError("Payment not confirmed yet. If you completed payment, please wait 3-5 seconds and click again.");
+                }
+              });
+            };
+          }
+        }, 3500);
+
+        // DIRECT REDIRECT: Triggers native UPI apps (PhonePe, GPay) directly on mobile WITHOUT Razorpay checkout modal!
+        window.location.href = orderData.payment_url;
+
+      } catch (err) {
+        console.error("Checkout initiation error:", err);
+        displayError(err.message || "Could not open payment. Please check your connection.");
+        payBtn.disabled = false;
+        btnText.innerText = `⚡ Pay ₹${amountNum} & Unlock Instantly`;
+        statusText.innerText = "Ready for instant access";
+      }
     }
   </script>
 </body>
