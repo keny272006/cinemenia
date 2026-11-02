@@ -454,6 +454,87 @@
       text-align: left;
       line-height: 1.4;
     }
+
+    /* Legal Compliance Footer */
+    .legal-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 14px;
+      width: 100%;
+    }
+    .legal-links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .legal-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .legal-links a:hover {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+    .legal-copyright {
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0.8;
+    }
+
+    /* Modal Overlay for Legal Policies */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 480px;
+      width: 100%;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.6;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close-btn:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -530,6 +611,33 @@
       <span id="statusText">Ready for instant access</span>
     </div>
 
+    <!-- Compliance Legal Footer -->
+    <div class="legal-footer">
+      <div class="legal-links">
+        <a onclick="openPolicyModal('terms')">Terms</a>
+        <span>•</span>
+        <a onclick="openPolicyModal('privacy')">Privacy</a>
+        <span>•</span>
+        <a onclick="openPolicyModal('refund')">Refund Policy</a>
+        <span>•</span>
+        <a onclick="openPolicyModal('contact')">Contact Support</a>
+      </div>
+      <div class="legal-copyright">© 2026 Cinemenia Media • All Rights Reserved</div>
+    </div>
+
+  </div>
+
+  <!-- Compliance Policy Modal -->
+  <div id="policyModal" class="modal-overlay" onclick="closePolicyModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div id="modalTitle" class="modal-title">Terms & Conditions</div>
+        <button class="modal-close-btn" onclick="closePolicyModal()">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
   </div>
 
   <script>
@@ -539,18 +647,67 @@
     const urlParams = new URLSearchParams(window.location.search);
     
     // Support both ?tg=, ?list=, and ?link=
-    const rawListId = urlParams.get("tg") || urlParams.get("list") || urlParams.get("link");
+    let rawListId = urlParams.get("tg") || urlParams.get("list") || urlParams.get("link");
+    if (rawListId) {
+      // Fix '+' being parsed as a space by URLSearchParams ('t.me/ Abc' -> 't.me/+Abc')
+      rawListId = rawListId.replace(/t\.me\/\s+/, "t.me/+").replace(/t\.me\/%20/, "t.me/+");
+    }
     const rawTitle = urlParams.get("title");
     const rawSi = urlParams.get("si");
     const rawPrice = urlParams.get("price");
     const paymentId = urlParams.get("payment_id") || urlParams.get("razorpay_payment_id");
     const statusParam = urlParams.get("status") || urlParams.get("razorpay_payment_link_status");
 
+    // Gateway-Safe Title Sanitizer (strips adult/explicit keywords for Razorpay)
+    function sanitizeForGateway(title) {
+      if (!title) return "VIP Graphic Novel Series";
+      let clean = decodeURIComponent(title)
+        .replace(/(hentai|uncensored|adult|18\+|nsfw|ecchi|erotic|porn|sex|raw|doujinshi|smut)/gi, "")
+        .replace(/[\[\]\(\)\{\}\-_:\|]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      return clean.length >= 3 ? `${clean} Digital Edition` : "VIP Graphic Novel Series";
+    }
+
+    const gatewayCleanTitle = sanitizeForGateway(rawTitle);
+
     // Dynamic Title & Heading Update
     if (rawTitle) {
-      const cleanTitle = decodeURIComponent(rawTitle);
-      document.title = `${cleanTitle} • VIP Manga`;
-      document.getElementById("movieHeading").innerHTML = `Unlock <span class="movie-highlight">${cleanTitle}</span>`;
+      document.title = `${gatewayCleanTitle} • VIP Manga`;
+      document.getElementById("movieHeading").innerHTML = `Unlock <span class="movie-highlight">${gatewayCleanTitle}</span>`;
+    }
+
+    // Policy Modal Handlers
+    const policyTexts = {
+      terms: {
+        title: "Terms & Conditions",
+        body: "<p>Cinemenia Media provides digital access passes to illustrated graphic novels, webtoons, and digital comic series. By making a payment, you receive immediate digital delivery and access to community reading channels. Redistribution or commercial resale without authorization is strictly prohibited.</p>"
+      },
+      privacy: {
+        title: "Privacy Policy",
+        body: "<p>We take user privacy seriously. We do not store any credit card, debit card, or UPI PIN information. All payment processing is securely handled by RBI-regulated, 256-bit encrypted payment gateways. Contact details provided during checkout are strictly used for delivery verification.</p>"
+      },
+      refund: {
+        title: "Cancellation & Refund Policy",
+        body: "<p>Access links to digital content are delivered instantly upon successful UPI payment confirmation. If you experience technical failure or are unable to access the content, please contact support within 24 hours of payment with your Transaction ID for an immediate link replacement or full refund.</p>"
+      },
+      contact: {
+        title: "Customer Support",
+        body: "<p>For any billing inquiries, delivery help, or link issues, please reach our 24/7 support team:<br><br><b>Email:</b> support@cinemeniaaa.in<br><b>Telegram Support:</b> @cinemenia_support<br><b>Response Time:</b> Within 2 to 4 hours.</p>"
+      }
+    };
+
+    function openPolicyModal(type) {
+      const p = policyTexts[type];
+      if (!p) return;
+      document.getElementById("modalTitle").innerText = p.title;
+      document.getElementById("modalBody").innerHTML = p.body;
+      document.getElementById("policyModal").style.display = "flex";
+    }
+
+    function closePolicyModal() {
+      const modal = document.getElementById("policyModal");
+      if (modal) modal.style.display = "none";
     }
 
     // Dynamic Price Calculation
@@ -598,7 +755,7 @@
 
     // Unlock Access UI
     function unlockAccessUI() {
-      const targetLink = decodeURIComponent(playlistId || "https://t.me/");
+      let targetLink = decodeURIComponent(playlistId || "https://t.me/").replace(/t\.me\/\s+/, "t.me/+").replace(/t\.me\/%20/, "t.me/+");
       const safeRedirectUrl = targetLink.startsWith("http") ? targetLink : `https://t.me/${targetLink}`;
       
       const statusText = document.getElementById("statusText");
@@ -717,7 +874,7 @@
     function buildCallbackUrl() {
       const base = window.location.origin + window.location.pathname;
       let cb = `${base}?tg=${playlistId}`;
-      if (rawTitle) cb += `&title=${encodeURIComponent(rawTitle)}`;
+      if (rawTitle) cb += `&title=${encodeURIComponent(gatewayCleanTitle)}`;
       if (rawSi) cb += `&si=${encodeURIComponent(rawSi)}`;
       if (rawPrice) cb += `&price=${amountNum}`;
       return cb;
@@ -730,7 +887,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: amountNum,
-            title: rawTitle || "VIP Manga Access",
+            title: gatewayCleanTitle,
             list: playlistId,
             callback_url: buildCallbackUrl()
           })
@@ -775,7 +932,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               amount: amountNum,
-              title: rawTitle || "VIP Manga Access",
+              title: gatewayCleanTitle,
               list: playlistId,
               callback_url: buildCallbackUrl()
             })
